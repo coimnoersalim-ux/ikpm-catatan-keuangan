@@ -1,64 +1,3 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Keuangan IKPM Mekarjaya</title>
-<style>
-:root{--bg:#f4f6fb;--card:#fff;--tx:#1b2333;--mu:#6b7487;--bd:#e4e8f1;--pri:#1d4ed8;--pri2:#dbe6ff;--in:#059669;--out:#e11d48;--hd:#1e3a8a;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0f1420;--card:#18202f;--tx:#e8ecf5;--mu:#93a0b8;--bd:#27324a;--pri:#6ea0ff;--pri2:#1f2f55;--in:#34d399;--out:#fb7185;--hd:#0b1226;color-scheme:dark}}
-:root[data-theme=dark]{--bg:#0f1420;--card:#18202f;--tx:#e8ecf5;--mu:#93a0b8;--bd:#27324a;--pri:#6ea0ff;--pri2:#1f2f55;--in:#34d399;--out:#fb7185;--hd:#0b1226;color-scheme:dark}
-*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
-body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding-bottom:84px}
-header{background:var(--hd);color:#fff;padding:14px 16px;display:flex;align-items:center;gap:12px;position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
-img.logo{border:0;border-radius:0;background:none;width:auto;height:46px;object-fit:contain;filter:drop-shadow(0 1px 3px #0006)}
-.logo{width:44px;height:44px;border-radius:50%;border:2px solid #facc15;display:grid;place-items:center;font-size:8px;font-weight:800;color:#facc15;text-align:center;line-height:1.1;flex:none;background:#1e3a8a}
-header h1{font-size:16px;margin:0}header small{opacity:.7;font-size:11px}header .sp{flex:1}
-main{max-width:980px;margin:0 auto;padding:16px}
-.card{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:16px;margin-bottom:14px}
-.hero{background:linear-gradient(135deg,#2563eb,#1e3a8a);color:#fff;border:0}
-.hero h2{font-size:32px;margin:4px 0 14px}.hero .r{display:flex;gap:18px;border-top:1px solid #ffffff44;padding-top:12px}.hero .r div{flex:1}.hero b{font-size:17px;display:block}
-.grid{display:grid;gap:14px;grid-template-columns:1fr}@media(min-width:720px){.grid.c2{grid-template-columns:1fr 1fr}}
-h3{margin:0 0 10px;font-size:15px}.mu{color:var(--mu);font-size:12px}
-.row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--bd)}.row:last-child{border:0}.row .g{flex:1;min-width:0}.row .g b{display:block;overflow-wrap:anywhere}
-.in{color:var(--in)}.out{color:var(--out)}.amt{font-weight:800;white-space:nowrap}
-button,select,input{font:inherit;color:var(--tx)}
-input,select{width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:10px}
-button{border:0;border-radius:10px;padding:9px 14px;font-weight:700;cursor:pointer;background:var(--pri);color:#fff}
-button.s{background:var(--pri2);color:var(--pri)}button.d{background:transparent;color:var(--mu);padding:6px 8px}button:disabled{opacity:.5}
-.chip{font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px;border:0}.ok{background:#05966922;color:var(--in)}.no{background:#e11d4822;color:var(--out)}
-.bar{display:flex;gap:6px;align-items:flex-end;height:120px;margin-top:6px}.bar div{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;gap:2px;font-size:10px;color:var(--mu)}.bar i{display:block;width:100%;border-radius:4px 4px 0 0;min-height:1px}
-nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--bd);display:flex;justify-content:space-around;padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px));z-index:6}
-nav button{background:none;color:var(--mu);font-size:11px;display:flex;flex-direction:column;gap:2px;align-items:center;padding:6px 10px}nav button.a{color:var(--pri)}nav span{font-size:18px}
-.f{display:grid;gap:10px}.tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}.tabs button{background:var(--pri2);color:var(--pri)}.tabs button.a{background:var(--pri);color:#fff}
-#toast{position:fixed;top:calc(70px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:8px 16px;border-radius:99px;z-index:20;display:none}
-.top{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap}.top select{width:auto}
-body:not(.isadmin) .adm{display:none!important}
-#rep{position:fixed;inset:0;background:#fff;color:#111;overflow:auto;z-index:40;font:12px/1.5 Georgia,"Times New Roman",serif}
-#rep .tb{position:sticky;top:0;background:#eef1f7;padding:8px 16px;display:flex;gap:8px;border-bottom:1px solid #ccd}
-#rep .pg{max-width:820px;margin:0 auto;padding:24px}
-#rep .kop{display:flex;gap:14px;align-items:center;border-bottom:3px double #111;padding-bottom:10px;margin-bottom:12px;font-size:14px}#rep .kop img{height:68px;width:auto}
-#rep h4{margin:16px 0 4px;font-size:13px}
-#rep table{width:100%;border-collapse:collapse;margin:6px 0 10px}#rep th,#rep td{border:1px solid #888;padding:4px 6px;text-align:left}#rep th{background:#e6ebf5}#rep .r{text-align:right}#rep tr{break-inside:avoid}#rep .sum{width:60%}
-#rep .ttd{display:flex;justify-content:space-between;margin-top:30px;text-align:center;break-inside:avoid}
-@media print{body>*:not(#rep){display:none!important}body{padding:0;background:#fff}#rep{position:static;overflow:visible}#rep .tb{display:none}#rep .pg{padding:0;max-width:none}@page{size:A4;margin:14mm}}
-</style>
-</head>
-<body>
-<header>
-  <img class="logo" alt="Logo IKPM" src="data:image/png;base64,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">
-  <div>
-    <h1>Keuangan IKPM</h1>
-    <small>Ikatan Pemuda Mekarjaya</small>
-  </div>
-  <div class="sp"></div>
-  <small id="st">memuat…</small>
-  <button class="s" id="lg" onclick="authBtn()" title="Masuk Admin" aria-label="Masuk Admin" style="padding:6px 10px;font-size:16px">🔑</button>
-</header>
-<main id="v"></main>
-<div id="toast"></div>
-<nav id="nav"></nav>
-<script src="config.js"></script>
 <script>
 const $=s=>document.querySelector(s),rp=n=>new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(n||0);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -100,15 +39,19 @@ function add(){if(!S.admin)return `<div class="card">Fitur ini khusus Admin.</di
 let TYPE='income';function ty(t){TYPE=t;$('#ti').className=t==='income'?'a':'';$('#te').className=t==='expense'?'a':''}
 function saveTx(){const a=+$('#am').value,d=$('#ds').value.trim(),dt=$('#dt').value;if(!(a>0)||!d||!dt)return toast('Lengkapi nominal, keterangan, dan tanggal.');
  w(async()=>{await addTx({type:TYPE,amount:a,category:$('#ct').value,description:d,date:dt});S.tab='home';TYPE='income';R()},'Transaksi dicatat.')}
+ 
 const since=m=>+(m.since||2022);
 const arrears=m=>{if(m.role!=='Anggota Tetap')return[];const r=[];for(let y=since(m);y<new Date().getFullYear();y++)if(!m.iuran?.[y])r.push(String(y));return r};
+// Modifikasi: Menghitung total tunggakan dinamis per anggota
+const arrearSum=m=>arrears(m).reduce((a,y)=>a+Number(m.tagihan?.[y]||IURAN),0);
+
 function members(){const y=S.year,per=y!=='all',cy=new Date().getFullYear();
  const ok=m=>(S.rt==='semua'||m.rt===S.rt)&&(!S.q||m.name.toLowerCase().includes(S.q.toLowerCase()))&&(S.filt==='semua'||(S.filt==='tunggak'?arrears(m).length>0:!per||(m.role==='Anggota Tetap'&&(S.filt==='lunas')===!!m.iuran?.[y])));
  const f=S.mem.filter(ok).sort((a,b)=>a.name.localeCompare(b.name));
- const tg=S.mem.filter(m=>arrears(m).length),tgSum=tg.reduce((a,m)=>a+arrears(m).length*IURAN,0);
+ const tg=S.mem.filter(m=>arrears(m).length),tgSum=tg.reduce((a,m)=>a+arrearSum(m),0);
  const card=m=>{const ar=arrears(m),dn=(m.don||[]).filter(d=>d.year===y).reduce((a,d)=>a+d.amount,0);
-  return `<div class="row"><div class="g"><b>${esc(m.name)}</b><span class="mu">${esc(m.rt)} • ${esc(m.role)}${m.role==='Anggota Tetap'?' • sejak '+since(m):''}</span>${ar.length?`<span class="out" style="font-size:12px;font-weight:700">Tunggakan ${ar.length} thn (${ar.join(', ')}) • ${rp(ar.length*IURAN)}</span>`:''}${m.role!=='Anggota Tetap'&&per&&dn?`<span class="in" style="font-size:12px">Donasi ${y}: ${rp(dn)}</span>`:''}</div>${per&&m.role==='Anggota Tetap'?`<button class="chip ${m.iuran?.[y]?'ok':'no'}" ${S.coll?'':'disabled'} onclick="iuran('${m.id}')">${m.iuran?.[y]?'LUNAS':'BELUM'}</button>`:''}${S.admin?`<button class="d" onclick="editMem('${m.id}')">✏️</button><button class="d" onclick="delMem('${m.id}')">🗑</button>`:''}</div>`};
-return `<div class="top"><div><h3 style="margin:0">Anggota (${S.mem.length})</h3><span class="mu">Iuran tetap ${rp(IURAN)}/tahun • Menunggak: ${tg.length} orang (${rp(tgSum)})</span></div><div style="display:flex;gap:8px;align-items:center;">${S.admin ? `<button class="s" onclick="editTarif()">⚙️ Ubah Tarif</button>` : ''}${yearSel()}</div></div>
+  return `<div class="row"><div class="g"><b>${esc(m.name)}</b><span class="mu">${esc(m.rt)} • ${esc(m.role)}${m.role==='Anggota Tetap'?' • sejak '+since(m):''}</span>${ar.length?`<span class="out" style="font-size:12px;font-weight:700">Tunggakan ${ar.length} thn (${ar.join(', ')}) • ${rp(arrearSum(m))}</span>`:''}${m.role!=='Anggota Tetap'&&per&&dn?`<span class="in" style="font-size:12px">Donasi ${y}: ${rp(dn)}</span>`:''}</div>${per&&m.role==='Anggota Tetap'?`<button class="chip ${m.iuran?.[y]?'ok':'no'}" ${S.coll?'':'disabled'} onclick="iuran('${m.id}')">${m.iuran?.[y]?'LUNAS':'BELUM'}</button>`:''}${S.admin?`<button class="d" onclick="editMem('${m.id}')">✏️</button><button class="d" onclick="delMem('${m.id}')">🗑</button>`:''}</div>`};
+return `<div class="top"><div><h3 style="margin:0">Anggota (${S.mem.length})</h3><span class="mu">Tarif Dasar Iuran: ${rp(IURAN)}/tahun • Menunggak: ${tg.length} orang (${rp(tgSum)})</span></div><div style="display:flex;gap:8px;align-items:center;">${S.admin ? `<button class="s" onclick="editTarif()">⚙️ Ubah Tarif Dasar</button>` : ''}${yearSel()}</div></div>
  <div class="card"><div class="f"><input placeholder="Cari nama…" value="${esc(S.q)}" oninput="S.q=this.value;clearTimeout(S._d);S._d=setTimeout(()=>{R();const e=$('.card input');e&&(e.focus(),e.setSelectionRange(99,99))},250)">
  <div class="tabs" style="margin:0">${['semua','RT Mekarjaya','RT Cipancur'].map(r=>`<button class="${S.rt===r?'a':''}" onclick="S.rt='${r}';R()">${r==='semua'?'Semua RT':r}</button>`).join('')}</div>
  <div class="tabs" style="margin:0">${[['semua','Semua'],['lunas','Lunas'],['belum','Belum'],['tunggak','Menunggak']].map(([k,l])=>`<button class="${S.filt===k?'a':''}" onclick="S.filt='${k}';R()">${l}</button>`).join('')}</div></div></div>
@@ -125,12 +68,22 @@ function emView(){const m=S.mem.find(x=>x.id===S.em.id);if(!m)return;const y=S.e
  <label class="mu">Mulai iuran tahun</label><select id="es">${opt(Array.from({length:cy-2021},(_,k)=>String(2022+k)),String(since(m)))}</select>
  <button onclick="saveMem()">Simpan Data Anggota</button><hr style="border:0;border-top:1px solid var(--bd);width:100%">
  <label class="mu">Catatan untuk tahun</label><select onchange="S.em.y=this.value;emView()">${opt(ys,y)}</select>
- ${tetap?`<select id="el"><option value="1"${i?' selected':''}>Lunas</option><option value="0"${i?'':' selected'}>Belum</option></select><label class="mu">Tanggal bayar</label><input id="ed" type="date" value="${i?.date||today()}"><label class="mu">Nominal (Rp)</label><input id="ea" type="number" inputmode="numeric" value="${i?.amount||IURAN}"><button onclick="saveIuran()">Simpan Iuran ${y}</button>`
+ ${tetap?`<select id="el"><option value="1"${i?' selected':''}>Lunas</option><option value="0"${i?'':' selected'}>Belum</option></select><label class="mu">Tanggal bayar (jika lunas)</label><input id="ed" type="date" value="${i?.date||today()}"><label class="mu">Nominal Iuran / Tunggakan (Rp)</label><input id="ea" type="number" inputmode="numeric" value="${i?.amount||m.tagihan?.[y]||IURAN}"><button onclick="saveIuran()">Simpan Status ${y}</button>`
  :`${dons.map(d=>`<div class="row"><div class="g">${esc(d.date)}</div><b>${rp(d.amount)}</b><button class="d" onclick="delDon('${d.id}')">🗑</button></div>`).join('')||'<div class="mu">Belum ada donasi tahun '+y+'.</div>'}<label class="mu">Tambah donasi</label><input id="da" type="number" inputmode="numeric" placeholder="Nominal (Rp)"><input id="dd" type="date" value="${today()}"><button onclick="addDon()">Tambah Donasi</button>`}
  <button class="s" onclick="$('#em').remove()">Tutup</button></div></div>`}
 function saveMem(){const n=$('#en').value.trim();if(!n)return toast('Nama tidak boleh kosong.');w(async()=>{await col('members').doc(S.em.id).update({name:n,rt:$('#er').value,role:$('#eo').value,since:+$('#es').value});$('#em').remove()},'Data anggota disimpan.')}
+
+// Modifikasi: Menyimpan status Lunas/Belum sekaligus menyimpan nominal khusus tunggakan jika berbeda
 function saveIuran(){const m=S.mem.find(x=>x.id===S.em.id),y=S.em.y,r=col('iuran').doc(`${m.id}_${y}`);
- w(async()=>{if($('#el').value==='1'){const a=+$('#ea').value,d=$('#ed').value;if(!(a>0)||!d)throw new Error('Isi nominal dan tanggal.');await r.set({memberId:m.id,name:m.name,rt:m.rt,year:y,date:d,amount:a,by:S.uid})}else await r.delete();$('#em').remove()},'Iuran '+y+' disimpan.')}
+ const a=+$('#ea').value,d=$('#ed').value;
+ w(async()=>{
+  if($('#el').value==='1'){
+   if(!(a>0)||!d)throw new Error('Isi nominal dan tanggal.');
+   await r.set({memberId:m.id,name:m.name,rt:m.rt,year:y,date:d,amount:a,by:S.uid});
+  }else await r.delete();
+  await col('members').doc(m.id).update({tagihan:{...(m.tagihan||{}),[y]:a}});
+  $('#em').remove()},'Status tahun '+y+' disimpan.')}
+
 function addDon(){const m=S.mem.find(x=>x.id===S.em.id),a=+$('#da').value,d=$('#dd').value;if(!(a>0)||!d)return toast('Isi nominal dan tanggal.');
  w(async()=>{await col('iuran').add({kind:'donasi',memberId:m.id,name:m.name,rt:m.rt,year:d.slice(0,4),date:d,amount:a,by:S.uid});$('#em').remove()},'Donasi dicatat.')}
 function delDon(id){if(confirm('Hapus donasi ini?'))w(async()=>{await col('iuran').doc(id).delete();$('#em').remove()},'Donasi dihapus.')}
@@ -141,7 +94,7 @@ function laporan(){if(!S.admin)return;const Y=S.year,per=Y==='all'?'Semua Tahun'
  let s=awal;const rows=t.map(x=>{const i=x.type==='income';s+=sg(x);return `<tr><td>${esc(x.date)}</td><td>${esc(x.description)}</td><td>${esc(x.category)}</td><td class="r">${i?rp(x.amount):''}</td><td class="r">${i?'':rp(x.amount)}</td><td class="r">${rp(s)}</td></tr>`}).join('');
  const tgs=S.mem.filter(m=>arrears(m).length),logo=document.querySelector('header img.logo');
  const rk=Y==='all'?'':`<h4>Rekap Iuran per RT</h4><table><tr><th>RT</th><th>Anggota Tetap</th><th>Lunas</th><th>Belum</th><th>Iuran Terkumpul</th><th>Donasi</th></tr>${rekapData().map(d=>`<tr><td>${d.rt}</td><td class="r">${d.tetap}</td><td class="r">${d.lunas}</td><td class="r">${d.belum.length}</td><td class="r">${rp(d.kas)}</td><td class="r">${rp(d.don)}</td></tr>`).join('')}</table>`;
- const tg=`<h4>Daftar Tunggakan Iuran (Tahun Sebelumnya)</h4>${tgs.length?`<table><tr><th>No</th><th>Nama</th><th>RT</th><th>Tahun</th><th>Jumlah</th></tr>${tgs.map((m,k)=>`<tr><td>${k+1}</td><td>${esc(m.name)}</td><td>${esc(m.rt)}</td><td>${arrears(m).join(', ')}</td><td class="r">${rp(arrears(m).length*IURAN)}</td></tr>`).join('')}<tr><th colspan="4">Total</th><th class="r">${rp(tgs.reduce((a,m)=>a+arrears(m).length*IURAN,0))}</th></tr></table>`:'<p>Tidak ada tunggakan.</p>'}`;
+ const tg=`<h4>Daftar Tunggakan Iuran (Tahun Sebelumnya)</h4>${tgs.length?`<table><tr><th>No</th><th>Nama</th><th>RT</th><th>Tahun</th><th>Jumlah</th></tr>${tgs.map((m,k)=>`<tr><td>${k+1}</td><td>${esc(m.name)}</td><td>${esc(m.rt)}</td><td>${arrears(m).join(', ')}</td><td class="r">${rp(arrearSum(m))}</td></tr>`).join('')}<tr><th colspan="4">Total</th><th class="r">${rp(tgs.reduce((a,m)=>a+arrearSum(m),0))}</th></tr></table>`:'<p>Tidak ada tunggakan.</p>'}`;
  const tgl=new Date().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
  let o=$('#rep');if(o)o.remove();o=document.createElement('div');o.id='rep';
  o.innerHTML=`<div class="tb"><button onclick="print()">🖨 Cetak / Simpan PDF</button><button class="s" onclick="$('#rep').remove()">✕ Tutup</button></div><div class="pg">
@@ -154,17 +107,13 @@ function addMem(){const n=$('#mn').value.trim();if(!n)return toast('Isi nama ang
 function delMem(id){if(confirm('Hapus anggota ini?'))w(()=>col('members').doc(id).delete(),'Anggota dihapus.')}
 function editTarif(){
   if(!S.admin) return;
-  const t = prompt("Masukkan nominal Iuran Wajib per tahun (hanya angka, tanpa titik):", IURAN);
+  const t = prompt("Masukkan nominal Tarif Dasar Iuran per tahun (angka saja, tanpa titik):", IURAN);
   if(t && Number(t) > 0){
     w(async() => await col('settings').doc('app').set({iuran: Number(t)}), "Tarif iuran diperbarui.");
   }
 }
-function iuranOld(id){const m=S.mem.find(x=>x.id===id),y=S.year,on=!m.iuran?.[y],tid=`iuran_${id}_${y}`;
- w(async()=>{await col('members').doc(id).update({iuran:{...(m.iuran||{}),[y]:on}});
-  if(on)await col('transactions').doc(tid).set({type:'income',amount:IURAN,category:'Iuran Anggota Tetap',description:`Iuran ${y} - ${m.name}`,date:y===String(new Date().getFullYear())?today():`${y}-12-31`,createdAt:new Date().toISOString()});
-  else await col('transactions').doc(tid).delete()},on?'Iuran lunas & tercatat di kas.':'Status iuran dibatalkan, kas dikoreksi.')}
 function iuran(id){if(!S.coll)return toast('Anda tidak punya izin mencatat iuran.');const m=S.mem.find(x=>x.id===id),y=S.year,on=!m.iuran?.[y],r=col('iuran').doc(`${id}_${y}`);
- (async()=>{try{if(on)await r.set({memberId:id,name:m.name,rt:m.rt,year:y,date:y===String(new Date().getFullYear())?today():`${y}-12-31`,amount:IURAN,by:S.uid});else await r.delete();toast(on?'Iuran lunas & tercatat di kas.':'Iuran dibatalkan, kas dikoreksi.')}catch(e){toast('Gagal: '+(e.message||e.code))}})()}
+ (async()=>{try{if(on)await r.set({memberId:id,name:m.name,rt:m.rt,year:y,date:y===String(new Date().getFullYear())?today():`${y}-12-31`,amount:Number(m.tagihan?.[y]||IURAN),by:S.uid});else await r.delete();toast(on?'Iuran lunas & tercatat di kas.':'Iuran dibatalkan, kas dikoreksi.')}catch(e){toast('Gagal: '+(e.message||e.code))}})()}
 function loans(){const L=S.loan.filter(l=>S.loanTab==='aktif'?l.status==='unpaid':l.status==='paid').sort((a,b)=>b.date.localeCompare(a.date));
  return `<div class="top"><div><h3 style="margin:0">Pinjaman Kas</h3><span class="mu">Bunga ${BUNGA*100}% dari pokok</span></div></div>
  ${S.admin?`<div class="card"><h3>Pinjaman Baru</h3><div class="f"><select id="lm"><option value="">— Pilih anggota —</option>${S.mem.map(m=>`<option value="${m.id}">${esc(m.name)} (${esc(m.rt)})</option>`).join('')}</select><input id="la" type="number" inputmode="numeric" min="1" placeholder="Pokok pinjaman (Rp)" oninput="$('#lp').textContent=this.value>0?'Total kembali: '+rp(this.value*${1+BUNGA}):''"><div class="mu" id="lp"></div><button onclick="addLoan()">Catat Pinjaman</button><div class="mu">Pokok otomatis tercatat sebagai pengeluaran kas.</div></div></div>`:''}
@@ -178,17 +127,17 @@ function payLoan(id){const l=S.loan.find(x=>x.id===id);if(!confirm(`Terima pelun
  w(async()=>{await col('loans').doc(id).update({status:'paid',paidAt:today()});await col('transactions').doc('in_'+id).set({type:'income',amount:l.total,category:'Pelunasan Pinjaman',description:`Pelunasan pinjaman - ${l.memberName} (bunga ${rp(l.interest)})`,date:today(),createdAt:new Date().toISOString()})},'Pinjaman lunas & kas diperbarui.')}
 function delLoan(id){if(!confirm('Hapus pinjaman beserta catatan kasnya?'))return;w(async()=>{await col('loans').doc(id).delete();await col('transactions').doc('out_'+id).delete();await col('transactions').doc('in_'+id).delete()},'Pinjaman dihapus.')}
 const RTS=['RT Mekarjaya','RT Cipancur'];
-function rekapData(){const y=S.year;return RTS.map(rt=>{const m=S.mem.filter(x=>x.rt===rt),t=m.filter(x=>x.role==='Anggota Tetap'),l=t.filter(x=>x.iuran?.[y]);return{rt,m,total:m.length,tetap:t.length,donatur:m.length-t.length,lunas:l.length,belum:t.filter(x=>!x.iuran?.[y]),kas:l.reduce((a,x)=>a+(x.iuran[y].amount||IURAN),0),don:m.reduce((a,x)=>a+(x.don||[]).filter(d=>d.year===y).reduce((b,d)=>b+d.amount,0),0),tg:t.filter(x=>arrears(x).length),target:t.length*IURAN}})}
+function rekapData(){const y=S.year;return RTS.map(rt=>{const m=S.mem.filter(x=>x.rt===rt),t=m.filter(x=>x.role==='Anggota Tetap'),l=t.filter(x=>x.iuran?.[y]);return{rt,m,total:m.length,tetap:t.length,donatur:m.length-t.length,lunas:l.length,belum:t.filter(x=>!x.iuran?.[y]),kas:l.reduce((a,x)=>a+(x.iuran[y].amount||Number(x.tagihan?.[y]||IURAN)),0),don:m.reduce((a,x)=>a+(x.don||[]).filter(d=>d.year===y).reduce((b,d)=>b+d.amount,0),0),tg:t.filter(x=>arrears(x).length),target:t.reduce((a,x)=>a+Number(x.tagihan?.[y]||IURAN),0)}})}
 function rekap(){if(S.year==='all')return `<div class="top"><h3 style="margin:0">Rekap per RT</h3>${yearSel()}</div><div class="card">Pilih satu tahun untuk melihat rekap iuran per RT.</div>`;
  const D=rekapData(),g=D.reduce((a,d)=>a+d.kas,0),tg=D.reduce((a,d)=>a+d.target,0);
  return `<div class="top"><h3 style="margin:0">Rekap Iuran ${S.year}</h3>${yearSel()}</div>
  <div class="card hero"><div class="mu" style="color:#cfe0ff">Terkumpul dari target</div><h2>${rp(g)} <span style="font-size:15px;opacity:.8">/ ${rp(tg)}</span></h2></div>
  <div class="card np adm" style="display:flex;gap:8px;flex-wrap:wrap"><button class="s" onclick="csvRekap()">⬇ Ekspor Semua RT</button>${RTS.map(r=>`<button class="s" onclick="csvRekap('${r}')">⬇ ${r}</button>`).join('')}<button class="s" onclick="laporan()">🖨 Laporan (PDF)</button></div>
  <div class="grid c2">${D.map(d=>`<div class="card"><h3>${d.rt}</h3><div class="mu">${d.total} anggota • ${d.tetap} tetap • ${d.donatur} donatur</div>
- <div class="row"><div class="g">Lunas</div><b class="in">${d.lunas} / ${d.tetap}</b></div><div class="row"><div class="g">Terkumpul</div><b>${rp(d.kas)}</b></div><div class="row"><div class="g">Belum lunas</div><b class="out">${d.belum.length} orang</b></div><div class="row"><div class="g">Menunggak tahun lalu</div><b class="out">${d.tg.length} orang • ${rp(d.tg.reduce((a,x)=>a+arrears(x).length*IURAN,0))}</b></div>
+ <div class="row"><div class="g">Lunas</div><b class="in">${d.lunas} / ${d.tetap}</b></div><div class="row"><div class="g">Terkumpul</div><b>${rp(d.kas)}</b></div><div class="row"><div class="g">Belum lunas</div><b class="out">${d.belum.length} orang</b></div><div class="row"><div class="g">Menunggak tahun lalu</div><b class="out">${d.tg.length} orang • ${rp(d.tg.reduce((a,x)=>a+arrearSum(x),0))}</b></div>
  ${d.belum.length?`<div class="mu" style="margin-top:8px">${d.belum.map(x=>esc(x.name)).join(', ')}</div>`:''}</div>`).join('')}</div>`}
 async function csvRekap(rt){if(!S.admin)return;const d=DL;if(!d)return toast('Unduh tidak tersedia di tampilan ini.');
- const rows=[['RT','Nama','Peran','Iuran '+S.year,'Nominal'],...rekapData().filter(x=>!rt||x.rt===rt).flatMap(x=>x.m.map(m=>[x.rt,m.name,m.role,m.role==='Anggota Tetap'?(m.iuran?.[S.year]?'Lunas':'Belum'):'-',m.role==='Anggota Tetap'&&m.iuran?.[S.year]?(m.iuran[S.year].amount||IURAN):0]))];
+ const rows=[['RT','Nama','Peran','Iuran '+S.year,'Nominal'],...rekapData().filter(x=>!rt||x.rt===rt).flatMap(x=>x.m.map(m=>[x.rt,m.name,m.role,m.role==='Anggota Tetap'?(m.iuran?.[S.year]?'Lunas':'Belum'):'-',m.role==='Anggota Tetap'&&m.iuran?.[S.year]?(m.iuran[S.year].amount||Number(m.tagihan?.[S.year]||IURAN)):0]))];
  const data=rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
  try{await d.save({filename:`rekap-iuran-${rt?rt.replace(' ','-'):'semua-rt'}-${S.year}.csv`,data})}catch(e){}}
 const TABS=[['home','🏠','Beranda'],['members','👥','Anggota'],['add','➕','Catat'],['loans','🤝','Pinjaman'],['kas','📒','Buku Kas'],['rekap','📊','Rekap RT']];
@@ -241,18 +190,3 @@ async function doLogin(e){e.preventDefault();try{await S.db.login($('#le').value
   R();
 })();
 </script>
-<script type="module">
-import {initializeApp} from "https://www.gstatic.com/firebasejs/13.2.0/firebase-app.js";
-import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut} from "https://www.gstatic.com/firebasejs/13.2.0/firebase-auth.js";
-import {getFirestore,collection,doc,addDoc,setDoc,updateDoc,deleteDoc,onSnapshot} from "https://www.gstatic.com/firebasejs/13.2.0/firebase-firestore.js";
-const app=initializeApp({apiKey:"AIzaSyDKdHZuDvacrMT_Y3YZLMRArggCjay1VD8",authDomain:"ikpm-catatan-keuangan.firebaseapp.com",projectId:"ikpm-catatan-keuangan",storageBucket:"ikpm-catatan-keuangan.firebasestorage.app",messagingSenderId:"449843262104",appId:"1:449843262104:web:9f751f532a98e50bb596ed"});
-const db=getFirestore(app),auth=getAuth(app);
-const ref=(n,id)=>id?doc(db,n,id):doc(collection(db,n));
-window.fbResolve({
- collection:n=>({doc:id=>{const r=ref(n,id);return{id:r.id,set:d=>setDoc(r,d),update:d=>updateDoc(r,d),delete:()=>deleteDoc(r)}},
-  add:d=>addDoc(collection(db,n),d),
-  onSnapshot:(f,e)=>onSnapshot(collection(db,n),q=>f({docs:q.docs.map(x=>({id:x.id,data:()=>x.data()}))}),e)}),
- onAuth:f=>onAuthStateChanged(auth,f),login:(e,p)=>signInWithEmailAndPassword(auth,e,p),logout:()=>signOut(auth)});
-</script>
-</body>
-</html>
