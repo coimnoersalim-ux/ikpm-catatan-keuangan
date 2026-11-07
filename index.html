@@ -110,6 +110,7 @@ nav button{color:#c9ced4;border-radius:4px}nav button.a{background:#dc4a35;color
 input[type=file]{padding:9px}
 nav button,#side button{position:relative}.bdg{position:absolute;top:0;right:4px;background:#dc4a35;color:#fff;border-radius:99px;font-size:10px;padding:1px 6px;font-weight:700}
 #side .bdg{position:static;margin-left:auto}
+.tg-list{display:flex;flex-wrap:wrap;gap:8px}.tg-list label{display:flex;gap:6px;align-items:center;background:var(--bg);border:1px solid var(--bd);border-radius:6px;padding:6px 10px;color:var(--tx);font-size:13px}.tg-list input{width:auto}
 </style>
 </head>
 <body>
@@ -132,7 +133,7 @@ function toggleTheme(){var t=document.documentElement.getAttribute('data-theme')
 const $=s=>document.querySelector(s),rp=n=>new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(n||0);
 const esc=s=>String(s!=null?s:'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let IURAN=25000;const BUNGA=.3,BULAN=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'],RTS=['RT Mekarjaya','RT Cipancur'];
-const S={tab:'home',year:String(new Date().getFullYear()),tx:[],mem:[],loan:[],iur:[],coll:false,admin:false,uid:'',db:null,user:null,q:'',rt:'semua',filt:'semua',loanTab:'aktif',ld:{},pay:[],payTab:'bayar',paid:false};
+const S={tab:'home',year:String(new Date().getFullYear()),tx:[],mem:[],loan:[],iur:[],coll:false,admin:false,uid:'',db:null,user:null,q:'',rt:'semua',filt:'semua',loanTab:'aktif',ld:{},pay:[],payTab:'bayar',paid:false,rekapTab:'rt',filt2:'semua'};
 const today=()=>new Date().toISOString().slice(0,10),CY=()=>new Date().getFullYear();
 function toast(m){const t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',3200)}
 const yearOf=t=>(t.date||'').slice(0,4);
@@ -148,9 +149,11 @@ const yearSel=()=>`<select onchange="S.year=this.value;R()" aria-label="Pilih ta
 const searchBox=ph=>`<input placeholder="${ph}" value="${esc(S.q)}" oninput="S.q=this.value;clearTimeout(S._d);S._d=setTimeout(()=>{R();const e=$('#q');e&&(e.focus(),e.setSelectionRange(99,99))},250)" id="q">`;
 
 /* ---- tunggakan ---- */
+let BASE=2025;
 const since=m=>+(m.since||2022);
 const tagihan=(m,y)=>(m.tagihan&&m.tagihan[y]!==undefined)?Number(m.tagihan[y]):IURAN;
-const arrears=m=>{if(m.role!=='Anggota Tetap')return[];const r=[];for(let y=since(m);y<CY();y++)if(!(m.iuran&&m.iuran[y]))r.push(String(y));return r};
+const isPaid=(m,y)=>!!(m.iuran&&m.iuran[y])||(+y<=BASE&&!(m.tunggak&&m.tunggak[y]))||+y<since(m);
+const arrears=m=>{if(m.role!=='Anggota Tetap')return[];const r=new Set();Object.keys(m.tunggak||{}).forEach(y=>{if(+y<CY()&&!(m.iuran&&m.iuran[y]))r.add(y)});for(let y=Math.max(BASE+1,since(m));y<CY();y++)if(!(m.iuran&&m.iuran[y]))r.add(String(y));return[...r].sort()};
 const arrearSum=m=>arrears(m).reduce((a,y)=>a+tagihan(m,y),0);
 const getIuranAmt=(m,y)=>(m.iuran&&m.iuran[y]&&m.iuran[y].amount)?m.iuran[y].amount:tagihan(m,y);
 const piutang=l=>l.total-(l.paidAmount||0);
@@ -179,7 +182,7 @@ function home(){const all=allTx(),td=today(),cy=String(CY()),ym=td.slice(0,7),Y=
  const ys=[...new Set(all.map(yearOf).concat(cy).filter(Boolean))].sort(),ydata=ys.map(y=>[sm('income',x=>yearOf(x)===y),sm('expense',x=>yearOf(x)===y)]);
  const per=[['Hari ini',x=>x.date===td],['Bulan ini',x=>(x.date||'').slice(0,7)===ym],['Tahun ini',x=>yearOf(x)===cy],['Seluruhnya',()=>1]];
  const tbl=`<div class="table-container" style="margin:-14px"><table class="kas-table"><thead><tr><th>Periode</th><th class="r">Pemasukan</th><th class="r">Pengeluaran</th><th class="r">Selisih</th></tr></thead><tbody>${per.map(([n,f])=>{const i=sm('income',f),o=sm('expense',f);return `<tr><td>${n}</td><td class="r in">${rp(i)}</td><td class="r out">${rp(o)}</td><td class="r"><b>${rp(i-o)}</b></td></tr>`}).join('')}</tbody></table></div>`;
- const tetap=S.mem.filter(m=>m.role==='Anggota Tetap'),lun=tetap.filter(m=>m.iuran&&m.iuran[yy]).length,pct=tetap.length?Math.round(lun/tetap.length*100):0,tg=S.mem.filter(m=>arrears(m).length);
+ const tetap=S.mem.filter(m=>m.role==='Anggota Tetap'),lun=tetap.filter(m=>isPaid(m,yy)).length,pct=tetap.length?Math.round(lun/tetap.length*100):0,tg=S.mem.filter(m=>arrears(m).length);
  const iur=`<div style="display:flex;justify-content:space-between"><b>Iuran lunas ${yy}</b><span>${lun} / ${tetap.length} (${pct}%)</span></div><div class="prog"><i style="width:${pct}%"></i></div><div class="row"><div class="g">Menunggak tahun lalu</div><b class="out">${tg.length} orang • ${rp(tg.reduce((a,m)=>a+arrearSum(m),0))}</b></div><div class="row"><div class="g">Pinjaman belum lunas</div><b>${aktif.length}</b></div><div class="row"><div class="g">Total anggota</div><b>${S.mem.length}</b></div>`;
  const last=all.slice().sort((a,b)=>(b.date+b.createdAt).localeCompare(a.date+a.createdAt)).slice(0,6).map(txRow).join('')||'<div class="empty">Belum ada transaksi.</div>';
  return `<div class="top"><h2 class="pt">Dashboard</h2>${yearSel()}</div><div class="bc"><b>Home</b> / Dashboard</div>
@@ -207,18 +210,18 @@ const toCsv=rows=>rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').joi
 /* ---- catat ---- */
 let CATAT_TAB='iuran';
 function setCatatTab(t){CATAT_TAB=t;R()}
-const fillAmt=()=>{const m=S.mem.find(x=>x.id===$('#c_mem').value);if(m&&$('#c_jenis').value==='iuran')$('#c_am').value=tagihan(m,$('#c_year').value)};
+const fillAmt=()=>{const m=memBy('c_mem');if(m&&$('#c_jenis').value==='iuran')$('#c_am').value=tagihan(m,$('#c_year').value)};
 function add(){if(!S.coll)return `<div class="card">Fitur ini khusus Pengurus.</div>`;if(!S.admin)CATAT_TAB='iuran';
  const cats=CATAT_TAB==='income'?['Donasi Umum','Kasaran','Lainnya']:['Kasaran / Operasional','Perlengkapan','Konsumsi','Lainnya'];
- const form=CATAT_TAB==='iuran'?`<select id="c_mem" onchange="fillAmt()"><option value="">— Pilih Anggota —</option>${S.mem.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(m=>`<option value="${m.id}">${esc(m.name)} (${esc(m.rt)})</option>`).join('')}</select>
+ const form=CATAT_TAB==='iuran'?`${memPick('c_mem','fillAmt()')}
  <select id="c_jenis" onchange="fillAmt()"><option value="iuran">Iuran Wajib (Anggota Tetap)</option><option value="donasi">Donasi</option></select>
  <label class="mu">Untuk tahun</label><select id="c_year" onchange="fillAmt()">${years().filter(y=>+y<=CY()).map(y=>`<option value="${y}"${y===(S.year==='all'?String(CY()):S.year)?' selected':''}>Tahun ${y}</option>`).join('')}</select>
  <input id="c_am" type="number" inputmode="numeric" placeholder="Nominal bayar (Rp)"><input id="c_dt" type="date" value="${today()}"><button onclick="saveCatatIuran()">Simpan Pembayaran</button>`
  :`<input id="c_am" type="number" inputmode="numeric" min="1" placeholder="Nominal (Rp)"><select id="c_ct">${cats.map(c=>`<option>${c}</option>`).join('')}</select><input id="c_ds" placeholder="Keterangan"><input id="c_dt" type="date" value="${today()}"><button onclick="saveCatatTx('${CATAT_TAB}')">Simpan Transaksi</button>`;
  return `<div class="card" style="max-width:520px;margin:auto"><h3>Catat Transaksi</h3><div class="f">
  <div class="tabs" style="display:grid;grid-template-columns:repeat(${S.admin?3:1},1fr);gap:4px"><button class="${CATAT_TAB==='iuran'?'a':''}" onclick="setCatatTab('iuran')">Iuran/Donasi</button>${S.admin?`<button class="${CATAT_TAB==='income'?'a':''}" onclick="setCatatTab('income')">Pemasukan</button><button class="${CATAT_TAB==='expense'?'a':''}" onclick="setCatatTab('expense')">Pengeluaran</button>`:''}</div>${form}</div></div>`}
-function saveCatatIuran(){const mId=$('#c_mem').value,jenis=$('#c_jenis').value,y=$('#c_year').value,a=+$('#c_am').value,dt=$('#c_dt').value,m=S.mem.find(x=>x.id===mId);
- if(!m)return toast('Pilih anggota terlebih dahulu.');if(!(a>0)||!dt)return toast('Isi nominal dan tanggal dengan benar.');
+function saveCatatIuran(){const mId=$('#c_mem').value,jenis=$('#c_jenis').value,y=$('#c_year').value,a=+$('#c_am').value,dt=$('#c_dt').value,m=memBy('c_mem');
+ if(!m)return toast('Ketik nama lalu pilih anggota dari daftar.');if(!(a>0)||!dt)return toast('Isi nominal dan tanggal dengan benar.');
  if(jenis==='iuran'){if(m.role!=='Anggota Tetap')return toast('Iuran wajib hanya untuk Anggota Tetap. Pilih Donasi.');if(m.iuran&&m.iuran[y]&&!confirm(`Iuran ${y} untuk ${m.name} sudah tercatat. Timpa dengan data baru?`))return}
  w(async()=>{const base={memberId:m.id,name:m.name,rt:m.rt,year:y,date:dt,amount:a,by:S.uid};
   if(jenis==='donasi')await col('iuran').add(Object.assign({kind:'donasi'},base));else await col('iuran').doc(`${m.id}_${y}`).set(base);
@@ -228,9 +231,9 @@ function saveCatatTx(type){const a=+$('#c_am').value,d=$('#c_ds').value.trim(),d
 
 /* ---- anggota ---- */
 function members(){const y=S.year,per=y!=='all';
- const ok=m=>(S.rt==='semua'||m.rt===S.rt)&&(!S.q||m.name.toLowerCase().includes(S.q.toLowerCase()))&&(S.filt==='semua'||(S.filt==='tunggak'?arrears(m).length>0:!per||(m.role==='Anggota Tetap'&&(S.filt==='lunas')===!!(m.iuran&&m.iuran[y]))));
+ const ok=m=>(S.rt==='semua'||m.rt===S.rt)&&(!S.q||m.name.toLowerCase().includes(S.q.toLowerCase()))&&(S.filt==='semua'||(S.filt==='tunggak'?arrears(m).length>0:!per||(m.role==='Anggota Tetap'&&(S.filt==='lunas')===isPaid(m,y))));
  const f=S.mem.filter(ok).sort((a,b)=>a.name.localeCompare(b.name)),tg=S.mem.filter(m=>arrears(m).length),tgSum=tg.reduce((a,m)=>a+arrearSum(m),0);
- const card=m=>{const ar=arrears(m),dn=(m.don||[]).filter(d=>d.year===y).reduce((a,d)=>a+d.amount,0),lunas=m.iuran&&m.iuran[y];
+ const card=m=>{const ar=arrears(m),dn=(m.don||[]).filter(d=>d.year===y).reduce((a,d)=>a+d.amount,0),lunas=isPaid(m,y);
   return `<div class="row"><div class="g"><b>${esc(m.name)}</b><span class="mu">${esc(m.rt)} • ${esc(m.role)}${m.role==='Anggota Tetap'?' • sejak '+since(m):''}</span>${ar.length?`<span class="out" style="font-size:12px;font-weight:700">Tunggakan ${ar.length} thn (${ar.join(', ')}) • ${rp(arrearSum(m))}</span>`:''}${per&&dn?`<span class="in" style="font-size:12px;font-weight:600">Donasi ${y}: ${rp(dn)}</span>`:''}</div>${per&&m.role==='Anggota Tetap'?`<span class="chip ${lunas?'ok':'no'}">${lunas?'LUNAS':'BELUM'}</span>`:''}${S.admin?`<button class="d" onclick="editMem('${m.id}')">⚙️ Atur</button><button class="d" onclick="delMem('${m.id}')" aria-label="Hapus">🗑</button>`:''}</div>`};
  return `<div class="top"><div><h3 style="margin:0">Anggota (${S.mem.length})</h3><span class="mu">Tarif dasar ${rp(IURAN)}/tahun • Menunggak: ${tg.length} orang (${rp(tgSum)})</span></div><div style="display:flex;gap:8px;align-items:center">${S.admin?`<button class="s" onclick="editTarif()">⚙️ Tarif</button>`:''}${yearSel()}</div></div>
  <div class="card"><div class="f">${searchBox('Cari nama…')}
@@ -241,10 +244,13 @@ function members(){const y=S.year,per=y!=='all';
 function addMem(){const n=$('#mn').value.trim(),rt=$('#mr').value;if(!n)return toast('Isi nama anggota.');if(S.mem.some(m=>m.name.toLowerCase()===n.toLowerCase()&&m.rt===rt)&&!confirm('Nama yang sama sudah ada di RT ini. Tetap tambahkan?'))return;
  w(async()=>{await col('members').add({name:n,rt,role:$('#mo').value,since:+$('#ms').value});R()},'Anggota ditambahkan.')}
 function delMem(id){const m=S.mem.find(x=>x.id===id);if(confirm(`Hapus anggota ${m?m.name:''}? Catatan pembayarannya tetap ada di Buku Kas.`))w(()=>col('members').doc(id).delete(),'Anggota dihapus.')}
-function editTarif(){const t=prompt('Tarif dasar iuran per tahun (angka saja):',IURAN);if(t===null)return;const n=Number(String(t).replace(/\D/g,''));if(!(n>0))return toast('Nominal tidak valid.');w(()=>col('settings').doc('app').set({iuran:n}),'Tarif iuran diperbarui.')}
+function editTarif(){const t=prompt('Tarif dasar iuran per tahun (angka saja):',IURAN);if(t===null)return;const n=Number(String(t).replace(/\D/g,''));if(!(n>0))return toast('Nominal tidak valid.');
+ const b=prompt('Tahun terakhir yang dianggap LUNAS untuk semua anggota, kecuali yang ditandai menunggak (tahun sebelum pencatatan online):',BASE);if(b===null)return;const by=Number(String(b).replace(/\D/g,''));if(!(by>=2022&&by<=CY()))return toast('Tahun tidak valid.');
+ w(()=>col('settings').doc('app').set({iuran:n,baseline:by}),'Pengaturan diperbarui.')}
 function editMem(id){if(!S.admin)return;S.em={id,y:S.year==='all'?String(CY()):S.year};emView()}
 function emView(){const m=S.mem.find(x=>x.id===S.em.id);if(!m)return;const y=S.em.y,cy=CY(),i=m.iuran&&m.iuran[y],tetap=m.role==='Anggota Tetap',dons=(m.don||[]).filter(d=>d.year===y);
  const ys=[];for(let k=Math.min(since(m),+y,cy);k<=Math.max(cy,+y);k++)ys.push(String(k));
+ const tgY=[];for(let k=since(m);k<=BASE;k++)tgY.push(String(k));
  const opt=(a,v)=>a.map(x=>`<option${x==v?' selected':''}>${x}</option>`).join('');
  let o=$('#em');if(!o){o=document.createElement('div');o.id='em';o.className='ovl';document.body.appendChild(o)}
  const khusus=m.tagihan&&m.tagihan[y]!==undefined;
@@ -255,7 +261,8 @@ function emView(){const m=S.mem.find(x=>x.id===S.em.id);if(!m)return;const y=S.e
  <label class="mu">Data untuk tahun</label><select onchange="S.em.y=this.value;emView()">${opt(ys,y)}</select>
  ${tetap?`<div class="mu"><b>Tagihan ${y}:</b> ${rp(tagihan(m,y))} (${khusus?'khusus':'tarif dasar'})</div>
  <div style="display:flex;gap:8px"><input id="ea" type="number" inputmode="numeric" placeholder="Tagihan khusus (kosong = tarif dasar)" value="${khusus?m.tagihan[y]:''}"><button class="s" onclick="saveTagihanKhusus()">Simpan</button></div>
- ${i?`<div class="mu in"><b>Pembayaran tercatat</b></div><input id="pd" type="date" value="${esc(i.date)}"><input id="pa" type="number" inputmode="numeric" value="${i.amount||tagihan(m,y)}"><div style="display:flex;gap:8px"><button class="s" onclick="savePay()">Simpan Perubahan</button><button class="d" onclick="delPay()">Hapus Pembayaran</button></div>`:'<div class="mu out">Belum dibayar. Catat lewat menu ➕ Catat.</div>'}`:''}
+ <label class="mu"><b>Tunggakan tahun-tahun sebelumnya</b> — centang tahun yang BELUM dibayar (yang tidak dicentang dianggap lunas)</label><div class="tg-list">${tgY.map(k=>`<label><input type="checkbox" class="tgc" value="${k}"${m.tunggak&&m.tunggak[k]?' checked':''}> ${k}</label>`).join('')||'<span class="mu">Tidak ada tahun sebelum pencatatan online.</span>'}</div><button class="s" onclick="saveTunggak()">Simpan Tunggakan</button>
+ ${i?`<div class="mu in"><b>Pembayaran tercatat</b></div><input id="pd" type="date" value="${esc(i.date)}"><input id="pa" type="number" inputmode="numeric" value="${i.amount||tagihan(m,y)}"><div style="display:flex;gap:8px"><button class="s" onclick="savePay()">Simpan Perubahan</button><button class="d" onclick="delPay()">Hapus Pembayaran</button></div>`:(isPaid(m,y)?'<div class="mu in">Lunas (dianggap sudah dibayar sebelum pencatatan online).</div>':'<div class="mu out">Belum dibayar. Catat lewat menu ➕ Catat.</div>')}`:''}
  <label class="mu">Donasi tahun ${y}</label>${dons.map(d=>`<div class="row"><div class="g">${esc(d.date)}</div><b>${rp(d.amount)}</b><button class="d" onclick="delDon('${d.id}')" aria-label="Hapus">🗑</button></div>`).join('')||'<div class="mu">Belum ada donasi.</div>'}
  <button class="d" onclick="$('#em').remove()">Tutup</button></div></div>`}
 const done=()=>{const e=$('#em');if(e)e.remove();R()};
@@ -269,10 +276,10 @@ function delDon(id){if(confirm('Hapus donasi ini?'))w(async()=>{await col('iuran
 /* ---- pinjaman ---- */
 function loans(){const L=S.loan.filter(l=>S.loanTab==='aktif'?l.status==='unpaid':l.status==='paid').sort((a,b)=>b.date.localeCompare(a.date));
  return `<div class="top"><div><h3 style="margin:0">Pinjaman Kas</h3><span class="mu">Bunga ${BUNGA*100}% dari pokok</span></div></div>
- ${S.admin?`<div class="card"><h3>Pinjaman Baru</h3><div class="f"><select id="lm"><option value="">— Pilih anggota —</option>${S.mem.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(m=>`<option value="${m.id}">${esc(m.name)} (${esc(m.rt)})</option>`).join('')}</select><input id="la" type="number" inputmode="numeric" min="1" placeholder="Pokok pinjaman (Rp)" oninput="$('#lp').textContent=this.value>0?'Total kembali: '+rp(this.value*${1+BUNGA}):''"><div class="mu" id="lp"></div><button onclick="addLoan()">Catat Pinjaman</button><div class="mu">Pokok otomatis tercatat sebagai pengeluaran kas.</div></div></div>`:''}
+ ${S.admin?`<div class="card"><h3>Pinjaman Baru</h3><div class="f">${memPick('lm','','Ketik nama anggota…')}<input id="la" type="number" inputmode="numeric" min="1" placeholder="Pokok pinjaman (Rp)" oninput="$('#lp').textContent=this.value>0?'Total kembali: '+rp(this.value*${1+BUNGA}):''"><div class="mu" id="lp"></div><button onclick="addLoan()">Catat Pinjaman</button><div class="mu">Pokok otomatis tercatat sebagai pengeluaran kas.</div></div></div>`:''}
  <div class="tabs"><button class="${S.loanTab==='aktif'?'a':''}" onclick="S.loanTab='aktif';R()">Belum lunas (${S.loan.filter(l=>l.status==='unpaid').length})</button><button class="${S.loanTab==='lunas'?'a':''}" onclick="S.loanTab='lunas';R()">Riwayat lunas</button></div>
  <div class="card">${L.map(l=>`<div class="row"><div class="g"><b>${esc(l.memberName)}</b><span class="mu">${esc(l.date)} • Pokok ${rp(l.amount)} + bunga ${rp(l.interest)}</span><span class="in" style="font-size:12px;font-weight:600">Dibayar: ${rp(l.paidAmount||0)}</span></div><div style="text-align:right"><div class="mu">Sisa</div><span class="amt ${l.status==='unpaid'?'out':'in'}">${rp(piutang(l))}</span></div>${S.admin?(l.status==='unpaid'?`<button class="s" onclick="payLoan('${l.id}')">Cicil</button>`:'')+`<button class="d" onclick="delLoan('${l.id}')" aria-label="Hapus">🗑</button>`:''}</div>`).join('')||'<div class="empty">Kosong.</div>'}</div>`}
-function addLoan(){const m=S.mem.find(x=>x.id===$('#lm').value),a=+$('#la').value;if(!m||!(a>0))return toast('Pilih anggota dan isi nominal.');
+function addLoan(){const m=memBy('lm'),a=+$('#la').value;if(!m||!(a>0))return toast('Pilih anggota dan isi nominal.');
  const i=Math.round(a*BUNGA),id=col('loans').doc().id;
  w(async()=>{await col('loans').doc(id).set({memberId:m.id,memberName:m.name,amount:a,interest:i,total:a+i,paidAmount:0,status:'unpaid',date:today()});
   await col('transactions').doc('out_'+id).set({type:'expense',amount:a,category:'Pinjaman Anggota',description:'Pinjaman - '+m.name,date:today(),loanId:id,createdAt:new Date().toISOString()});R()},'Pinjaman dicatat.')}
@@ -285,9 +292,9 @@ function delLoan(id){if(!confirm('Hapus pinjaman beserta seluruh catatan kasnya 
  w(async()=>{await col('loans').doc(id).delete();for(const t of S.tx.filter(t=>t.loanId===id||t.id==='out_'+id||t.id==='in_'+id))await col('transactions').doc(t.id).delete()},'Pinjaman dihapus.')}
 
 /* ---- rekap & laporan ---- */
-function rekapData(){const y=S.year;return RTS.map(rt=>{const m=S.mem.filter(x=>x.rt===rt),t=m.filter(x=>x.role==='Anggota Tetap'),l=t.filter(x=>x.iuran&&x.iuran[y]);
- return{rt,m,total:m.length,tetap:t.length,donatur:m.length-t.length,lunas:l.length,belum:t.filter(x=>!(x.iuran&&x.iuran[y])),kas:l.reduce((a,x)=>a+getIuranAmt(x,y),0),don:m.reduce((a,x)=>a+(x.don||[]).filter(d=>d.year===y).reduce((b,d)=>b+d.amount,0),0),tg:t.filter(x=>arrears(x).length),target:t.reduce((a,x)=>a+tagihan(x,y),0)}})}
-function rekap(){if(S.year==='all')return `<div class="top"><h3 style="margin:0">Rekap per RT</h3>${yearSel()}</div><div class="card empty">Pilih satu tahun untuk melihat rekap iuran per RT.</div>`;
+function rekapData(){const y=S.year;return RTS.map(rt=>{const m=S.mem.filter(x=>x.rt===rt),t=m.filter(x=>x.role==='Anggota Tetap'),l=t.filter(x=>isPaid(x,y));
+ return{rt,m,total:m.length,tetap:t.length,donatur:m.length-t.length,lunas:l.length,belum:t.filter(x=>!isPaid(x,y)),kas:l.reduce((a,x)=>a+getIuranAmt(x,y),0),don:m.reduce((a,x)=>a+(x.don||[]).filter(d=>d.year===y).reduce((b,d)=>b+d.amount,0),0),tg:t.filter(x=>arrears(x).length),target:t.reduce((a,x)=>a+tagihan(x,y),0)}})}
+function rekapRT(){if(S.year==='all')return `<div class="top"><h3 style="margin:0">Rekap per RT</h3>${yearSel()}</div><div class="card empty">Pilih satu tahun untuk melihat rekap iuran per RT.</div>`;
  const D=rekapData(),g=D.reduce((a,d)=>a+d.kas,0),tg=D.reduce((a,d)=>a+d.target,0);
  return `<div class="top"><h3 style="margin:0">Rekap Iuran ${S.year}</h3>${yearSel()}</div>
  <div class="card hero"><div class="mu" style="color:#d1fae5">Terkumpul dari target</div><h2>${rp(g)} <span style="font-size:15px;opacity:.8">/ ${rp(tg)}</span></h2></div>
@@ -295,8 +302,36 @@ function rekap(){if(S.year==='all')return `<div class="top"><h3 style="margin:0"
  <div class="grid c2">${D.map(d=>`<div class="card"><h3>${d.rt}</h3><div class="mu">${d.total} anggota • ${d.tetap} tetap • ${d.donatur} donatur</div>
  <div class="row"><div class="g">Lunas</div><b class="in">${d.lunas} / ${d.tetap}</b></div><div class="row"><div class="g">Terkumpul</div><b>${rp(d.kas)}</b></div><div class="row"><div class="g">Donasi</div><b>${rp(d.don)}</b></div><div class="row"><div class="g">Belum lunas</div><b class="out">${d.belum.length} orang</b></div><div class="row"><div class="g">Menunggak tahun lalu</div><b class="out">${d.tg.length} orang • ${rp(d.tg.reduce((a,x)=>a+arrearSum(x),0))}</b></div>
  ${d.belum.length?`<div class="mu" style="margin-top:8px">${d.belum.map(x=>esc(x.name)).join(', ')}</div>`:''}</div>`).join('')}</div>`}
-async function csvRekap(rt){if(!S.admin)return;const rows=[['RT','Nama','Peran','Iuran '+S.year,'Nominal'],...rekapData().filter(x=>!rt||x.rt===rt).flatMap(x=>x.m.map(m=>{const tt=m.role==='Anggota Tetap',p=m.iuran&&m.iuran[S.year];return[x.rt,m.name,m.role,tt?(p?'Lunas':'Belum'):'-',tt&&p?getIuranAmt(m,S.year):0]}))];
+async function csvRekap(rt){if(!S.admin)return;const rows=[['RT','Nama','Peran','Iuran '+S.year,'Nominal'],...rekapData().filter(x=>!rt||x.rt===rt).flatMap(x=>x.m.map(m=>{const tt=m.role==='Anggota Tetap',p=isPaid(m,S.year);return[x.rt,m.name,m.role,tt?(p?'Lunas':'Belum'):'-',tt&&p?getIuranAmt(m,S.year):0]}))];
  await DL.save({filename:`rekap-iuran-${rt?rt.replace(' ','-'):'semua-rt'}-${S.year}.csv`,data:toCsv(rows)})}
+const bebanOf=m=>{const cy=String(CY()),tt=m.role==='Anggota Tetap',paid=isPaid(m,cy),iuranBelum=tt&&!paid?tagihan(m,cy):0,tg=arrears(m),tgSum=arrearSum(m),L=S.loan.filter(l=>l.memberId===m.id&&l.status==='unpaid');
+ const lp=L.reduce((a,l)=>a+l.amount,0),lb=L.reduce((a,l)=>a+l.interest,0),ld=L.reduce((a,l)=>a+(l.paidAmount||0),0),ls=L.reduce((a,l)=>a+piutang(l),0);
+ return{cy,tt,paid,iuranBelum,tg,tgSum,L,lp,lb,ld,ls,total:iuranBelum+tgSum+ls,tahunan:(tt?tagihan(m,cy):0)+lp+lb}};
+function rekapNama(){const cy=String(CY()),q=S.q.toLowerCase();
+ const B=S.mem.filter(m=>(S.rt==='semua'||m.rt===S.rt)&&(!q||m.name.toLowerCase().includes(q))).sort((a,b)=>a.name.localeCompare(b.name)).map(m=>[m,bebanOf(m)]).filter(([m,b])=>S.filt2!=='ada'||b.total>0);
+ const tot=B.reduce((a,[,b])=>a+b.total,0);
+ const card=([m,b])=>`<div class="card"><div class="top" style="margin-bottom:6px"><div><b style="font-size:15px">${esc(m.name)}</b><div class="mu">${esc(m.rt)} • ${esc(m.role)}</div></div><div style="text-align:right"><div class="mu">Sisa yang harus dibayar</div><b class="amt ${b.total?'out':'in'}" style="font-size:18px">${rp(b.total)}</b></div></div>
+  <div class="row"><div class="g">Iuran ${cy}</div>${b.tt?`<span class="chip ${b.paid?'ok':'no'}">${b.paid?'LUNAS':'BELUM'}</span><b>${rp(tagihan(m,cy))}</b>`:'<span class="mu">Anggota Donatur (tanpa iuran wajib)</span>'}</div>
+  ${b.tg.length?`<div class="row"><div class="g">Tunggakan iuran<span class="mu">Tahun ${b.tg.join(', ')}</span></div><b class="out">${rp(b.tgSum)}</b></div>`:''}
+  ${b.L.map(l=>`<div class="row"><div class="g">Pinjaman (${esc(l.date)})<span class="mu">Pokok ${rp(l.amount)} + bunga ${rp(l.interest)} = ${rp(l.total)}</span><span class="mu">Sudah dibayar ${rp(l.paidAmount||0)}</span></div><b class="out">${rp(piutang(l))}</b></div>`).join('')}
+  <div class="mu" style="margin-top:8px">Beban tahun ini (iuran + pinjaman + bunga): ${rp(b.tt?tagihan(m,cy):0)} + ${rp(b.lp)} + ${rp(b.lb)} = <b>${rp(b.tahunan)}</b></div></div>`;
+ return `<div class="card">${searchBox('Cari nama anggota…')}<div class="tabs" style="margin:10px 0 0">${['semua','RT Mekarjaya','RT Cipancur'].map(r=>`<button class="${S.rt===r?'a':''}" onclick="S.rt='${r}';R()">${r==='semua'?'Semua RT':r}</button>`).join('')}<button class="${S.filt2==='ada'?'a':''}" onclick="S.filt2=S.filt2==='ada'?'semua':'ada';R()">Hanya yang punya beban</button></div>
+  <div class="adm" style="margin-top:10px"><button class="s" onclick="csvNama()">⬇ Ekspor CSV</button></div></div>
+ <div class="card"><div class="mu">${B.length} anggota ditampilkan</div><b style="font-size:20px" class="${tot?'out':'in'}">${rp(tot)}</b><div class="mu">total sisa yang harus dibayar (iuran tahun ini yang belum lunas + tunggakan + sisa pinjaman)</div></div>
+ ${B.map(card).join('')||'<div class="card empty">Tidak ada anggota.</div>'}`}
+async function csvNama(){if(!S.admin)return;const cy=CY(),rows=[['Nama','RT','Peran','Iuran '+cy,'Status iuran','Tunggakan (tahun)','Tunggakan (Rp)','Pinjaman pokok','Bunga','Sudah dibayar','Sisa pinjaman','Sisa yang harus dibayar'],...S.mem.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(m=>{const b=bebanOf(m);return[m.name,m.rt,m.role,b.tt?tagihan(m,cy):0,b.tt?(b.paid?'Lunas':'Belum'):'-',b.tg.join(' '),b.tgSum,b.lp,b.lb,b.ld,b.ls,b.total]})];
+ await DL.save({filename:`rekap-per-nama-${cy}.csv`,data:toCsv(rows)})}
+function rekap(){const t=`<div class="tabs"><button class="${S.rekapTab!=='nama'?'a':''}" onclick="S.rekapTab='rt';S.q='';R()">Per RT</button><button class="${S.rekapTab==='nama'?'a':''}" onclick="S.rekapTab='nama';S.q='';R()">Per Nama (Beban)</button></div>`;return t+(S.rekapTab==='nama'?rekapNama():rekapRT())}
+function setujuiPinjaman(p,m){const l=S.loan.find(x=>x.id===p.loanId);if(!l||l.status!=='unpaid')return toast('Pinjaman tidak ditemukan atau sudah lunas.');
+ const amt=Math.min(p.amount,piutang(l));if(amt<p.amount&&!confirm(`Nominal ${rp(p.amount)} melebihi sisa ${rp(piutang(l))}. Catat ${rp(amt)} saja?`))return;
+ const paid=(l.paidAmount||0)+amt,lunas=paid>=l.total;
+ w(async()=>{await col('loans').doc(l.id).update({paidAmount:paid,status:lunas?'paid':'unpaid',paidAt:lunas?p.date:''});
+  await addTx({type:'income',amount:amt,category:'Pelunasan Pinjaman',description:`${lunas?'Pelunasan':'Cicilan'} pinjaman - ${l.memberName}`,date:p.date,loanId:l.id,paymentId:p.id});
+  await col('pembayaran').doc(p.id).update({status:'disetujui',verifiedBy:S.uid,verifiedAt:new Date().toISOString()})},lunas?'Pinjaman lunas, kas diperbarui.':'Cicilan dicatat, kas diperbarui.')}
+function saveTunggak(){const m=S.mem.find(x=>x.id===S.em.id),t={};document.querySelectorAll('.tgc:checked').forEach(c=>t[c.value]=true);w(async()=>{await col('members').doc(m.id).update({tunggak:t});done()},'Tunggakan disimpan.')}
+const memLbl=m=>`${m.name} (${m.rt})`;
+const memPick=(id,fn,ph)=>`<input id="${id}" list="dl_${id}" autocomplete="off" placeholder="${ph||'Ketik untuk mencari nama…'}" oninput="${fn||''}"><datalist id="dl_${id}">${S.mem.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(m=>`<option value="${esc(memLbl(m))}">`).join('')}</datalist>`;
+const memBy=id=>{const e=$('#'+id),v=((e&&e.value)||'').trim().toLowerCase();if(!v)return null;const ex=S.mem.find(m=>memLbl(m).toLowerCase()===v);if(ex)return ex;const s=S.mem.filter(m=>m.name.toLowerCase()===v);return s.length===1?s[0]:null};
 function laporan(){if(!S.admin)return;const Y=S.year,per=Y==='all'?'Semua Tahun':'Tahun '+Y;
  const awal=Y==='all'?0:allTx().filter(x=>yearOf(x)<Y).reduce((a,x)=>a+sg(x),0),t=ftx().slice().sort((a,b)=>(a.date+a.createdAt).localeCompare(b.date+b.createdAt));
  const mi=t.filter(x=>x.type==='income').reduce((a,x)=>a+x.amount,0),mo=t.filter(x=>x.type==='expense').reduce((a,x)=>a+x.amount,0),piut=S.loan.reduce((a,l)=>a+(l.status==='unpaid'?piutang(l):0),0);
@@ -324,9 +359,12 @@ function compress(file){return new Promise((ok,no)=>{if(!file||!file.type.starts
   im.onload=()=>{let q=.75,mx=1000;const draw=()=>{const sc=Math.min(1,mx/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*sc);c.height=Math.round(im.height*sc);c.getContext('2d').drawImage(im,0,0,c.width,c.height);return c.toDataURL('image/jpeg',q)};
    let d=draw();while(d.length>650000&&q>.35){q-=.1;mx-=100;d=draw()}d.length>650000?no(new Error('Gambar terlalu besar.')):ok(d)};im.src=fr.result};fr.readAsDataURL(file)})}
 async function pickBukti(inp){const f=inp.files&&inp.files[0];if(!f)return;try{BUKTI=await compress(f);const p=$('#p_prev');p.src=BUKTI;p.style.display='block'}catch(e){BUKTI='';inp.value='';toast(e.message)}}
-function fillPay(){const m=S.mem.find(x=>x.id===$('#p_mem').value),j=$('#p_jenis').value,y=$('#p_year').value,i=$('#p_info');if(!m){i.textContent='';return}
- if(j==='iuran'){if(m.role!=='Anggota Tetap'){i.textContent='Anggota Donatur tidak memiliki iuran wajib. Pilih Donasi.';return}$('#p_am').value=tagihan(m,y);i.textContent=(m.iuran&&m.iuran[y]?`Iuran ${y} sudah tercatat lunas. `:`Tagihan ${y}: ${rp(tagihan(m,y))}. `)+(arrears(m).length?`Tunggakan: ${arrears(m).join(', ')}.`:'')}
+function fillPay(){const m=memBy('p_mem'),j=$('#p_jenis').value,y=$('#p_year').value,i=$('#p_info'),lb=$('#p_loanbox');lb.innerHTML='';if(!m){i.textContent='';return}
+ if(j==='iuran'){if(m.role!=='Anggota Tetap'){i.textContent='Anggota Donatur tidak memiliki iuran wajib. Pilih Donasi.';return}$('#p_am').value=tagihan(m,y);i.textContent=(isPaid(m,y)?`Iuran ${y} sudah tercatat lunas. `:`Tagihan ${y}: ${rp(tagihan(m,y))}. `)+(arrears(m).length?`Tunggakan: ${arrears(m).join(', ')}.`:'')}
+ else if(j==='pinjaman'){const L=S.loan.filter(l=>l.memberId===m.id&&l.status==='unpaid');if(!L.length){i.textContent='Anda tidak memiliki pinjaman yang belum lunas.';return}
+  lb.innerHTML=`<select id="p_loan" onchange="fillLoan()">${L.map(l=>`<option value="${l.id}">Pinjaman ${esc(l.date)} • sisa ${rp(piutang(l))}</option>`).join('')}</select>`;fillLoan()}
  else i.textContent='Donasi bebas, isi nominal sesuai yang Anda transfer.'}
+function fillLoan(){const l=S.loan.find(x=>x.id===$('#p_loan').value);if(!l)return;$('#p_am').value=piutang(l);$('#p_info').textContent=`Pokok ${rp(l.amount)} + bunga ${rp(l.interest)} = ${rp(l.total)}. Sudah dibayar ${rp(l.paidAmount||0)}, sisa ${rp(piutang(l))}. Boleh membayar sebagian (cicilan).`}
 const copyNo=()=>{const n=(CFG.DANA||{}).nomor;navigator.clipboard&&navigator.clipboard.writeText(n).then(()=>toast('Nomor DANA disalin.'),()=>toast('Gagal menyalin.'))};
 function bayar(){const t=S.coll?`<div class="tabs"><button class="${S.payTab==='bayar'?'a':''}" onclick="S.payTab='bayar';R()">Bayar</button><button class="${S.payTab==='verif'?'a':''}" onclick="S.payTab='verif';R()">Verifikasi (${pend().length})</button><button class="${S.payTab==='riwayat'?'a':''}" onclick="S.payTab='riwayat';R()">Riwayat</button></div>`:'';
  if(S.coll&&S.payTab==='verif')return t+`<div class="card">${pend().sort((a,b)=>a.createdAt.localeCompare(b.createdAt)).map(p=>payRow(p,0)).join('')||'<div class="empty">Tidak ada pembayaran yang menunggu verifikasi.</div>'}</div>`;
@@ -334,24 +372,26 @@ function bayar(){const t=S.coll?`<div class="tabs"><button class="${S.payTab==='
  if(S.paid)return t+`<div class="card" style="max-width:520px;margin:auto;text-align:center"><div style="font-size:46px">✅</div><h3>Konfirmasi terkirim</h3><p class="mu">Terima kasih. Pengurus akan memeriksa bukti transfer Anda. Setelah disetujui, pembayaran tercatat di kas.</p><button onclick="S.paid=false;R()">Kirim konfirmasi lain</button></div>`;
  const d=CFG.DANA||{},cy=CY();
  return t+`<div class="pg2"><div class="pnl"><div class="pnl-h">Bayar via DANA</div><div class="pnl-b" style="text-align:center"><img class="qr" src="${QR}" alt="QR DANA IKPM">${d.nomor?`<div style="margin-top:10px"><span class="mu">Nomor DANA</span><br><b style="font-size:19px">${esc(d.nomor)}</b> <button class="s" onclick="copyNo()">Salin</button></div>`:''}${d.nama?`<div class="mu">a.n. ${esc(d.nama)}</div>`:''}
- <ol class="steps"><li>Buka aplikasi <b>DANA</b>, pilih <b>Scan</b> lalu pindai QR di atas (atau kirim ke nomor di atas).</li><li>Transfer sesuai nominal iuran atau donasi.</li><li>Simpan <b>tangkapan layar bukti transfer</b>.</li><li>Isi formulir konfirmasi di samping dan <b>unggah buktinya</b>.</li><li>Tunggu verifikasi pengurus.</li></ol></div></div>
+ <ol class="steps"><li>Buka aplikasi <b>DANA</b>, pilih <b>Scan</b> lalu pindai QR di atas (atau kirim ke nomor di atas).</li><li>Transfer sesuai nominal iuran, donasi, atau pembayaran pinjaman.</li><li>Simpan <b>tangkapan layar bukti transfer</b>.</li><li>Isi formulir konfirmasi di samping dan <b>unggah buktinya</b>.</li><li>Tunggu verifikasi pengurus.</li></ol></div></div>
  <div class="pnl"><div class="pnl-h">Konfirmasi Pembayaran (Bukti Wajib)</div><div class="pnl-b"><div class="f">
- <select id="p_mem" onchange="fillPay()"><option value="">— Pilih nama Anda —</option>${S.mem.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(m=>`<option value="${m.id}">${esc(m.name)} (${esc(m.rt)})</option>`).join('')}</select>
- <select id="p_jenis" onchange="fillPay()"><option value="iuran">Iuran Wajib (Anggota Tetap)</option><option value="donasi">Donasi</option></select>
+ ${memPick('p_mem','fillPay()','Ketik nama Anda…')}
+ <select id="p_jenis" onchange="fillPay()"><option value="iuran">Iuran Wajib (Anggota Tetap)</option><option value="donasi">Donasi</option><option value="pinjaman">Pembayaran Pinjaman</option></select>
  <label class="mu">Untuk tahun</label><select id="p_year" onchange="fillPay()">${years().filter(y=>+y<=cy).map(y=>`<option${+y===cy?' selected':''}>${y}</option>`).join('')}</select>
- <div class="mu" id="p_info"></div>
+ <div class="mu" id="p_info"></div><div id="p_loanbox"></div>
  <input id="p_am" type="number" inputmode="numeric" placeholder="Nominal yang ditransfer (Rp)"><label class="mu">Tanggal transfer</label><input id="p_dt" type="date" value="${today()}" max="${today()}"><input id="p_note" maxlength="200" placeholder="Catatan (opsional)">
  <label class="mu"><b>Bukti transfer (wajib)</b> — foto atau tangkapan layar</label><input id="p_file" type="file" accept="image/*" onchange="pickBukti(this)"><img id="p_prev" class="prev" alt="Pratinjau bukti" style="display:none">
  <button id="p_send" onclick="sendPay()">Kirim Konfirmasi</button></div></div></div></div>`}
-async function sendPay(){const m=S.mem.find(x=>x.id===$('#p_mem').value),jenis=$('#p_jenis').value,y=$('#p_year').value,a=Math.round(+$('#p_am').value),dt=$('#p_dt').value;
- if(!m)return toast('Pilih nama Anda terlebih dahulu.');if(jenis==='iuran'&&m.role!=='Anggota Tetap')return toast('Iuran wajib hanya untuk Anggota Tetap. Pilih Donasi.');
+async function sendPay(){const m=memBy('p_mem'),jenis=$('#p_jenis').value,y=$('#p_year').value,a=Math.round(+$('#p_am').value),dt=$('#p_dt').value;
+ if(!m)return toast('Ketik nama Anda lalu pilih dari daftar.');if(jenis==='iuran'&&m.role!=='Anggota Tetap')return toast('Iuran wajib hanya untuk Anggota Tetap. Pilih Donasi.');
  if(!(a>0)||!dt)return toast('Isi nominal dan tanggal transfer.');if(!BUKTI)return toast('Bukti transfer wajib diunggah.');
+ let lid='';if(jenis==='pinjaman'){const l=S.loan.find(x=>x.id===(($('#p_loan')||{}).value));if(!l)return toast('Pilih pinjaman yang dibayar.');if(a>piutang(l))return toast('Nominal melebihi sisa pinjaman ('+rp(piutang(l))+').');lid=l.id}
  const b=$('#p_send');b.disabled=true;
- try{await col('pembayaran').add({memberId:m.id,name:m.name,rt:m.rt,jenis,year:y,amount:a,date:dt,note:$('#p_note').value.trim().slice(0,200),bukti:BUKTI,status:'menunggu',createdAt:new Date().toISOString()});BUKTI='';S.paid=true;R()}
+ try{await col('pembayaran').add({memberId:m.id,name:m.name,rt:m.rt,jenis,year:jenis==='pinjaman'?dt.slice(0,4):y,amount:a,date:dt,note:$('#p_note').value.trim().slice(0,200),bukti:BUKTI,...(lid?{loanId:lid}:{}),status:'menunggu',createdAt:new Date().toISOString()});BUKTI='';S.paid=true;R()}
  catch(e){toast('Gagal mengirim: '+(e.message||e.code));b.disabled=false}}
-function payRow(p,h){return `<div class="row" style="align-items:flex-start"><img class="thumb" src="${okImg(p.bukti)?p.bukti:''}" onclick="lihat('${p.id}')" alt="Bukti" title="Lihat bukti"><div class="g"><b>${esc(p.name)}</b><span class="mu">${esc(p.rt)} • ${p.jenis==='iuran'?'Iuran '+esc(p.year):'Donasi'} • ${esc(p.date)}</span><span class="amt">${rp(p.amount)}</span>${p.note?`<span class="mu">“${esc(p.note)}”</span>`:''}${h?`<span class="chip ${p.status==='disetujui'?'ok':'no'}">${esc(String(p.status).toUpperCase())}</span>${p.alasan?`<span class="mu">${esc(p.alasan)}</span>`:''}`:''}</div>${!h?`<div style="display:grid;gap:6px"><button onclick="setujui('${p.id}')">✓ Setujui</button><button class="d" onclick="tolak('${p.id}')">✕ Tolak</button></div>`:''}${h&&S.admin?`<button class="d" onclick="delPayRec('${p.id}')" aria-label="Hapus">🗑</button>`:''}</div>`}
+function payRow(p,h){return `<div class="row" style="align-items:flex-start"><img class="thumb" src="${okImg(p.bukti)?p.bukti:''}" onclick="lihat('${p.id}')" alt="Bukti" title="Lihat bukti"><div class="g"><b>${esc(p.name)}</b><span class="mu">${esc(p.rt)} • ${p.jenis==='iuran'?'Iuran '+esc(p.year):p.jenis==='pinjaman'?'Pembayaran Pinjaman':'Donasi'} • ${esc(p.date)}</span><span class="amt">${rp(p.amount)}</span>${p.note?`<span class="mu">“${esc(p.note)}”</span>`:''}${h?`<span class="chip ${p.status==='disetujui'?'ok':'no'}">${esc(String(p.status).toUpperCase())}</span>${p.alasan?`<span class="mu">${esc(p.alasan)}</span>`:''}`:''}</div>${!h?`<div style="display:grid;gap:6px">${p.jenis==='pinjaman'&&!S.admin?'<span class="mu">Disetujui Admin</span>':`<button onclick="setujui('${p.id}')">✓ Setujui</button>`}<button class="d" onclick="tolak('${p.id}')">✕ Tolak</button></div>`:''}${h&&S.admin?`<button class="d" onclick="delPayRec('${p.id}')" aria-label="Hapus">🗑</button>`:''}</div>`}
 function lihat(id){const p=S.pay.find(x=>x.id===id);if(!p)return;const o=document.createElement('div');o.className='ovl';o.onclick=()=>o.remove();o.innerHTML=okImg(p.bukti)?`<img src="${p.bukti}" alt="Bukti transfer" style="max-width:100%;max-height:92vh;border-radius:8px;background:#fff">`:'<div class="card">Bukti tidak valid.</div>';document.body.appendChild(o)}
 function setujui(id){const p=S.pay.find(x=>x.id===id),m=p&&S.mem.find(x=>x.id===p.memberId);if(!m)return toast('Anggota tidak ditemukan (mungkin sudah dihapus).');
+ if(p.jenis==='pinjaman')return setujuiPinjaman(p,m);
  if(p.jenis==='iuran'&&m.iuran&&m.iuran[p.year]&&!confirm(`Iuran ${p.year} untuk ${m.name} sudah tercatat. Timpa dengan pembayaran ini?`))return;
  w(async()=>{const base={memberId:m.id,name:m.name,rt:m.rt,year:p.year,date:p.date,amount:p.amount,by:S.uid,paymentId:id};
   if(p.jenis==='donasi')await col('iuran').add(Object.assign({kind:'donasi'},base));else await col('iuran').doc(`${m.id}_${p.year}`).set(base);
@@ -362,7 +402,7 @@ function delPayRec(id){if(confirm('Hapus catatan pembayaran ini?'))w(()=>col('pe
 
 /* ---- navigasi & render ---- */
 const TABS=[['home','🏠','Beranda'],['members','👥','Anggota'],['add','➕','Catat'],['bayar','💳','Bayar'],['loans','🤝','Pinjaman'],['kas','📒','Buku Kas'],['rekap','📊','Rekap']];
-const TITLES={home:'Dashboard',members:'Anggota',add:'Catat Transaksi',bayar:'Pembayaran Online',loans:'Pinjaman Kas',kas:'Buku Kas Umum',rekap:'Rekap Iuran'};
+const TITLES={home:'Dashboard',members:'Anggota',add:'Catat Transaksi',bayar:'Pembayaran Online',loans:'Pinjaman Kas',kas:'Buku Kas Umum',rekap:'Rekap'};
 const qaHtml=()=>!S.coll?'':`<button onclick="CATAT_TAB='iuran';go('add')">＋ Iuran</button>`+(S.admin?`<button onclick="CATAT_TAB='income';go('add')">＋ Pemasukan</button><button onclick="CATAT_TAB='expense';go('add')">＋ Pengeluaran</button><button onclick="go('loans')">＋ Pinjaman</button>`:'');
 const loaded=()=>['tx','mem','loan','iur'].every(k=>S.ld[k]);
 function R(){if(S.tab==='add'&&!S.coll)S.tab='home';document.body.classList.toggle('isadmin',!!S.admin);
@@ -385,7 +425,7 @@ async function doLogin(e){e.preventDefault();try{await S.db.login($('#le').value
  api.onAuth(u=>{S.user=u;const m=norm(u&&u.email);S.admin=ADMINS.includes(m);S.coll=S.admin||COLLECTORS.includes(m);S.uid=u?u.uid:'';if(S.coll&&!S.unPay){S.unPay=col('pembayaran').onSnapshot(q=>{S.pay=q.docs.map(d=>Object.assign({id:d.id},d.data()));R()},()=>toast('Gagal memuat pembayaran (cek aturan Firestore).'))}else if(!S.coll&&S.unPay){S.unPay();S.unPay=null;S.pay=[]}if(u&&!S.coll)toast('Email '+u.email+' belum terdaftar sebagai pengurus.');R()});
  const sub=(n,k)=>col(n).onSnapshot(s=>{S[k]=s.docs.map(d=>Object.assign({id:d.id},d.data()));S.ld[k]=1;sync();R()},()=>{S.ld[k]=1;toast('Gagal memuat data '+n+' (cek aturan Firestore).');R()});
  sub('transactions','tx');sub('members','mem');sub('loans','loan');sub('iuran','iur');
- col('settings').onSnapshot(s=>{const d=s.docs.find(x=>x.id==='app');if(d)IURAN=Number(d.data().iuran)||25000;R()},()=>{});
+ col('settings').onSnapshot(s=>{const d=s.docs.find(x=>x.id==='app');if(d){IURAN=Number(d.data().iuran)||25000;BASE=Number(d.data().baseline)||2025}R()},()=>{});
 })();
 </script>
 <script type="module">
