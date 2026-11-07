@@ -6,7 +6,7 @@ window.IKPM_CONFIG = {
     // email penarik iuran ditambahkan nanti, contoh: 'penarik1@gmail.com',
   ],
   DANA: {
-    nomor: '085212345620',   // isi nomor DANA lengkap, contoh: '085212345620'
+    nomor: '085295325620',   // isi nomor DANA lengkap, contoh: '085212345620'
     nama: 'NURSALIM'     // nama pemilik akun DANA
   }
 };
