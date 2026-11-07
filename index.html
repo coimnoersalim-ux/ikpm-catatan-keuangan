@@ -49,7 +49,7 @@ body:not(.isadmin) .adm{display:none!important}
 <script>
 const $=s=>document.querySelector(s),rp=n=>new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(n||0);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const IURAN=25000,BUNGA=.3,BULAN=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+let IURAN=25000; const BUNGA=.3,BULAN=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
 const S={tab:'home',year:String(new Date().getFullYear()),tx:[],mem:[],loan:[],iur:[],coll:false,uid:'',admin:false,db:null,q:'',rt:'semua',filt:'semua',ready:false,loanTab:'aktif'};
 const today=()=>new Date().toISOString().slice(0,10);
 function toast(m){const t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',2800)}
@@ -95,7 +95,7 @@ function members(){const y=S.year,per=y!=='all',cy=new Date().getFullYear();
  const tg=S.mem.filter(m=>arrears(m).length),tgSum=tg.reduce((a,m)=>a+arrears(m).length*IURAN,0);
  const card=m=>{const ar=arrears(m),dn=(m.don||[]).filter(d=>d.year===y).reduce((a,d)=>a+d.amount,0);
   return `<div class="row"><div class="g"><b>${esc(m.name)}</b><span class="mu">${esc(m.rt)} • ${esc(m.role)}${m.role==='Anggota Tetap'?' • sejak '+since(m):''}</span>${ar.length?`<span class="out" style="font-size:12px;font-weight:700">Tunggakan ${ar.length} thn (${ar.join(', ')}) • ${rp(ar.length*IURAN)}</span>`:''}${m.role!=='Anggota Tetap'&&per&&dn?`<span class="in" style="font-size:12px">Donasi ${y}: ${rp(dn)}</span>`:''}</div>${per&&m.role==='Anggota Tetap'?`<button class="chip ${m.iuran?.[y]?'ok':'no'}" ${S.coll?'':'disabled'} onclick="iuran('${m.id}')">${m.iuran?.[y]?'LUNAS':'BELUM'}</button>`:''}${S.admin?`<button class="d" onclick="editMem('${m.id}')">✏️</button><button class="d" onclick="delMem('${m.id}')">🗑</button>`:''}</div>`};
- return `<div class="top"><div><h3 style="margin:0">Anggota (${S.mem.length})</h3><span class="mu">Iuran tetap ${rp(IURAN)}/tahun • Menunggak: ${tg.length} orang (${rp(tgSum)})</span></div>${yearSel()}</div>
+return `<div class="top"><div><h3 style="margin:0">Anggota (${S.mem.length})</h3><span class="mu">Iuran tetap ${rp(IURAN)}/tahun • Menunggak: ${tg.length} orang (${rp(tgSum)})</span></div><div style="display:flex;gap:8px;align-items:center;">${S.admin ? `<button class="s" onclick="editTarif()">⚙️ Ubah Tarif</button>` : ''}${yearSel()}</div></div>
  <div class="card"><div class="f"><input placeholder="Cari nama…" value="${esc(S.q)}" oninput="S.q=this.value;clearTimeout(S._d);S._d=setTimeout(()=>{R();const e=$('.card input');e&&(e.focus(),e.setSelectionRange(99,99))},250)">
  <div class="tabs" style="margin:0">${['semua','RT Mekarjaya','RT Cipancur'].map(r=>`<button class="${S.rt===r?'a':''}" onclick="S.rt='${r}';R()">${r==='semua'?'Semua RT':r}</button>`).join('')}</div>
  <div class="tabs" style="margin:0">${[['semua','Semua'],['lunas','Lunas'],['belum','Belum'],['tunggak','Menunggak']].map(([k,l])=>`<button class="${S.filt===k?'a':''}" onclick="S.filt='${k}';R()">${l}</button>`).join('')}</div></div></div>
@@ -139,6 +139,13 @@ function laporan(){if(!S.admin)return;const Y=S.year,per=Y==='all'?'Semua Tahun'
  document.body.appendChild(o)}
 function addMem(){const n=$('#mn').value.trim();if(!n)return toast('Isi nama anggota.');w(async()=>{await col('members').add({name:n,rt:$('#mr').value,role:$('#mo').value,since:+$('#ms').value});R()},'Anggota ditambahkan.')}
 function delMem(id){if(confirm('Hapus anggota ini?'))w(()=>col('members').doc(id).delete(),'Anggota dihapus.')}
+ function editTarif(){
+  if(!S.admin) return;
+  const t = prompt("Masukkan nominal Iuran Wajib per tahun (hanya angka, tanpa titik):", IURAN);
+  if(t && Number(t) > 0){
+    w(async() => await col('settings').doc('app').set({iuran: Number(t)}), "Tarif iuran diperbarui.");
+  }
+}
 function iuranOld(id){const m=S.mem.find(x=>x.id===id),y=S.year,on=!m.iuran?.[y],tid=`iuran_${id}_${y}`;
  w(async()=>{await col('members').doc(id).update({iuran:{...(m.iuran||{}),[y]:on}});
   if(on)await col('transactions').doc(tid).set({type:'income',amount:IURAN,category:'Iuran Anggota Tetap',description:`Iuran ${y} - ${m.name}`,date:y===String(new Date().getFullYear())?today():`${y}-12-31`,createdAt:new Date().toISOString()});
@@ -192,6 +199,9 @@ async function doLogin(e){e.preventDefault();try{await S.db.login($('#le').value
  api.onAuth(u=>{S.user=u;const m=norm(u&&u.email);S.admin=ADMINS.includes(m);S.owner=S.admin;S.coll=S.admin||COLLECTORS.includes(m);S.uid=u?u.uid:'';if(u&&!S.coll)toast('Email '+u.email+' belum terdaftar sebagai pengurus.');R()});
  const sub=(n,k)=>col(n).onSnapshot(s=>{S[k]=s.docs.map(d=>({id:d.id,...d.data()}));sync();R()},e=>toast('Gagal memuat data (cek aturan Firestore).'));
  sub('transactions','tx');sub('members','mem');sub('loans','loan');sub('iuran','iur');R()})();
+ sub('transactions','tx');sub('members','mem');sub('loans','loan');sub('iuran','iur');
+ col('settings').doc('app').onSnapshot(s => { if(s.exists()){ IURAN = s.data().iuran || 25000; } R(); });
+ R()})();
 </script>
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/13.2.0/firebase-app.js";
