@@ -202,7 +202,6 @@ async function doLogin(e){e.preventDefault();try{await S.db.login($('#le').value
  sub('transactions','tx');sub('members','mem');sub('loans','loan');sub('iuran','iur');
  col('settings').onSnapshot(s => { const d = s.docs.find(x => x.id === 'app'); if(d) { IURAN = d.data().iuran || 25000; } R(); });
  R()})();
- R()})();
 </script>
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/13.2.0/firebase-app.js";
