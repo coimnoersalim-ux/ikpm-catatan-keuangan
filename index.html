@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Keuangan IKPM Mekarjaya</title>
+<!-- Favicon menggunakan gambar lampiran -->
 <link rel="icon" type="image/jpeg" href="image_5a2419.jpg">
 <style>
 /* TEMA BARU: Modern Emerald (Hijau) */
@@ -32,6 +33,16 @@ button:active{transform:scale(0.96)}
 button.s{background:var(--pri2);color:var(--pri)}button.d{background:var(--bg);color:var(--out);padding:8px 10px}button:disabled{opacity:.5;transform:none}
 .chip{font-size:11px;font-weight:800;padding:4px 10px;border-radius:99px;border:0;letter-spacing:0.5px;display:inline-block}.ok{background:#10b98122;color:var(--in)}.no{background:#ef444422;color:var(--out)}
 .bar{display:flex;gap:6px;align-items:flex-end;height:120px;margin-top:6px}.bar div{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;gap:4px;font-size:10px;color:var(--mu)}.bar i{display:block;width:100%;border-radius:6px 6px 0 0;min-height:2px}
+
+/* TABEL BUKU KAS */
+.table-container{overflow-x:auto;margin:0 -18px;border-top:1px solid var(--bd)}
+.kas-table{width:100%;border-collapse:collapse;font-size:13px}
+.kas-table th{background:var(--bg);color:var(--mu);text-align:left;padding:12px 18px;font-weight:600;border-bottom:1px solid var(--bd);white-space:nowrap}
+.kas-table td{padding:12px 18px;border-bottom:1px dashed var(--bd);vertical-align:middle}
+.kas-table tr:last-child td{border-bottom:0}
+.kas-table .r{text-align:right}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]) .kas-table tbody tr:hover{background:#374151}}
+
 /* Navigasi Melayang (Floating) */
 nav{position:fixed;bottom:calc(16px + env(safe-area-inset-bottom,0px));left:16px;right:16px;max-width:480px;margin:0 auto;background:var(--card);border:1px solid var(--bd);border-radius:24px;display:flex;justify-content:space-around;padding:8px;z-index:6;box-shadow:var(--shadow)}
 nav button{background:transparent;color:var(--mu);font-size:11px;display:flex;flex-direction:column;gap:3px;align-items:center;padding:8px 12px;border-radius:16px;font-weight:600}
@@ -77,7 +88,7 @@ const yearOf=t=>(t.date||'').slice(0,4);
 const years=()=>{const a=new Set(Array.from({length:9},(_,i)=>String(2022+i)));allTx().forEach(t=>a.add(yearOf(t)));return[...a].filter(Boolean).sort().reverse()};
 const allTx=()=>S.tx.filter(t=>!t.id.startsWith('iuran_')).concat(S.iur.map(i=>({id:'i_'+i.id,virtual:1,type:'income',amount:i.amount||IURAN,category:i.kind==='donasi'?'Donasi':'Iuran Anggota Tetap',description:i.kind==='donasi'?`Donasi - ${i.name}`:`Iuran ${i.year} - ${i.name}`,date:i.date,createdAt:i.date})));
 const sync=()=>{S.mem.forEach(m=>{m.iuran={};m.don=[]});S.iur.forEach(i=>{const m=S.mem.find(x=>x.id===i.memberId);if(!m)return;if(i.kind==='donasi')m.don.push(i);else m.iuran[i.year]=i})};
-const ftx=()=>allTx().filter(t=>S.year==='all'||yearOf(t)===S.year).sort((a,b)=>(b.date+b.createdAt).localeCompare(a.date+a.createdAt));
+const ftx=()=>allTx().filter(t=>S.year==='all'||yearOf(t)===S.year).sort((a,b)=>(a.date+a.createdAt).localeCompare(a.date+a.createdAt));
 async function w(fn,ok){if(!S.db||!S.admin)return toast('Hanya Admin yang dapat mengubah data.');try{await fn();ok&&toast(ok)}catch(e){toast('Gagal menyimpan: '+(e.message||e.code))}}
 const col=n=>S.db.collection(n);
 const addTx=(o)=>col('transactions').add(Object.assign({}, o, {createdAt:new Date().toISOString()}));
@@ -97,9 +108,59 @@ function home(){const t=ftx(),i=t.filter(x=>x.type==='income').reduce((a,x)=>a+x
  <div class="card"><h3>Mutasi Terbaru</h3>${t.slice(0,5).map(x=>txRow(x,false)).join('')||'<div class="mu">Belum ada transaksi.</div>'}</div>`}
 
 function txRow(x,del){return `<div class="row"><div class="g"><b>${esc(x.description)}</b><span class="mu">${esc(x.date)} • ${esc(x.category)}</span></div><span class="amt ${x.type==='income'?'in':'out'}">${x.type==='income'?'+':'−'}${rp(x.amount)}</span>${del&&S.admin&&!x.virtual?`<button class="d" onclick="delTx('${x.id}')">🗑</button>`:''}</div>`}
-function kas(){const t=ftx().filter(x=>!S.q||(x.description+x.category).toLowerCase().includes(S.q.toLowerCase()));
- return `<div class="top"><h3 style="margin:0">Buku Kas Umum</h3>${yearSel()}</div><div class="card np"><input placeholder="Cari transaksi…" value="${esc(S.q)}" oninput="S.q=this.value;clearTimeout(S._d);S._d=setTimeout(()=>{R();const e=$('.card input');e&&(e.focus(),e.setSelectionRange(99,99))},250)"><div class="adm" style="display:flex;gap:8px;margin-top:10px"><button class="s" onclick="csv()">⬇ Ekspor CSV</button><button class="s" onclick="laporan()">🖨 Laporan (PDF)</button></div></div>
- <div class="card">${t.map(x=>txRow(x,1)).join('')||'<div class="mu">Tidak ada data.</div>'}</div>`}
+
+/* BUKU KAS DENGAN TABEL DAN RUNNING BALANCE */
+function kas(){
+ let allTxRaw = allTx();
+ let prevSaldo = 0;
+ if (S.year !== 'all') {
+    prevSaldo = allTxRaw.filter(x => yearOf(x) < S.year).reduce((sum, x) => sum + (x.type === 'income' ? x.amount : -x.amount), 0);
+ }
+ let t = ftx().slice().sort((a,b)=>(a.date+a.createdAt).localeCompare(b.date+b.createdAt));
+ let currentSaldo = prevSaldo;
+ t.forEach(x => {
+    currentSaldo += (x.type === 'income' ? x.amount : -x.amount);
+    x.saldo = currentSaldo;
+ });
+ if(S.q) {
+    t = t.filter(x => (x.description+x.category).toLowerCase().includes(S.q.toLowerCase()));
+ }
+
+ const rows = t.map(x => {
+    const isInc = x.type === 'income';
+    return `<tr>
+        <td style="white-space:nowrap">${esc(x.date)}</td>
+        <td><b>${esc(x.description)}</b><br><small class="mu">${esc(x.category)}</small></td>
+        <td class="r in" style="font-weight:600">${isInc ? rp(x.amount) : '-'}</td>
+        <td class="r out" style="font-weight:600">${!isInc ? rp(x.amount) : '-'}</td>
+        <td class="r" style="font-weight:700">${rp(x.saldo)}</td>
+        ${S.admin ? `<td style="text-align:center">${!x.virtual ? `<button class="d" onclick="delTx('${x.id}')">🗑</button>` : ''}</td>` : ''}
+    </tr>`;
+ }).join('');
+
+ return `<div class="top"><h3 style="margin:0">Buku Kas Umum</h3>${yearSel()}</div>
+ <div class="card np"><input placeholder="Cari transaksi…" value="${esc(S.q)}" oninput="S.q=this.value;clearTimeout(S._d);S._d=setTimeout(()=>{R();const e=$('.card input');e&&(e.focus(),e.setSelectionRange(99,99))},250)"><div class="adm" style="display:flex;gap:8px;margin-top:10px"><button class="s" onclick="csv()">⬇ Ekspor CSV</button><button class="s" onclick="laporan()">🖨 Laporan (PDF)</button></div></div>
+ <div class="card" style="padding-bottom:0">
+    <div class="table-container">
+        <table class="kas-table">
+            <thead>
+                <tr>
+                    <th>Tanggal</th>
+                    <th>Uraian & Kategori</th>
+                    <th class="r">Masuk (Rp)</th>
+                    <th class="r">Keluar (Rp)</th>
+                    <th class="r">Saldo (Rp)</th>
+                    ${S.admin ? '<th style="width:40px;text-align:center">Aksi</th>' : ''}
+                </tr>
+                ${S.year !== 'all' ? `<tr><td colspan="4" style="background:#f9fafb"><i>Saldo Pindahan Tahun Sebelumnya</i></td><td class="r" style="font-weight:700;background:#f9fafb">${rp(prevSaldo)}</td>${S.admin?'<td style="background:#f9fafb"></td>':''}</tr>` : ''}
+            </thead>
+            <tbody>
+                ${rows || `<tr><td colspan="${S.admin?'6':'5'}" class="mu" style="text-align:center;padding:20px">Tidak ada data transaksi.</td></tr>`}
+            </tbody>
+        </table>
+    </div>
+ </div>`}
+
 function delTx(id){if(confirm('Hapus transaksi ini?'))w(()=>col('transactions').doc(id).delete(),'Transaksi dihapus.')}
 
 async function csv(){if(!S.admin)return;const d=DL;const rows=[['Tanggal','Jenis','Kategori','Keterangan','Nominal'],...ftx().map(x=>[x.date,x.type==='income'?'Masuk':'Keluar',x.category,x.description,x.amount])];
@@ -184,8 +245,8 @@ function emView(){const m=S.mem.find(x=>x.id===S.em.id);if(!m)return;const y=S.e
  <input id="en" value="${esc(m.name)}" placeholder="Nama"><select id="er">${opt(RTS,m.rt)}</select><select id="eo">${opt(['Anggota Tetap','Anggota Donatur'],m.role)}</select>
  <label class="mu">Mulai iuran tahun</label><select id="es">${opt(Array.from({length:cy-2021},(_,k)=>String(2022+k)),String(since(m)))}</select>
  <button onclick="saveMem()">Simpan Profil</button><hr style="border:0;border-top:1px dashed var(--bd);width:100%">
- ${tetap?`<label class="mu" style="color:var(--out);font-weight:bold">Ubah Tagihan Khusus (Jika berbeda dari tarif dasar)</label><div style="display:flex;gap:8px"><select id="es_y" onchange="S.em.y=this.value;emView()" style="width:auto">${opt(ys,y)}</select><input id="ea" type="number" inputmode="numeric" value="${tagihan(m,y)}"></div><button class="s" onclick="saveTagihanKhusus()">Simpan Tagihan Khusus ${y}</button><div class="mu">*Pembayaran tetap dilakukan di menu Catat Transaksi.</div>`
- :'<div class="mu">Anggota donatur tidak memiliki tagihan tetap.</div>'}
+ ${tetap?`<label class="mu" style="color:var(--out);font-weight:bold">Ubah Tagihan Khusus (Jika berbeda dari tarif dasar)</label><div style="display:flex;gap:8px"><select id="es_y" onchange="S.em.y=this.value;emView()" style="width:auto">${opt(ys,y)}</select><input id="ea" type="number" inputmode="numeric" value="${tagihan(m,y)}"></div><button class="s" onclick="saveTagihanKhusus()">Simpan Tagihan Khusus ${y}</button><div class="mu" style="font-weight:600;color:var(--in)">*Pembayaran wajib/donasi kini dilakukan di menu CATAT TRANSAKSI ➕.</div>`
+ :'<div class="mu">Anggota donatur tidak memiliki tagihan tetap. Pembayaran dilakukan di menu CATAT TRANSAKSI.</div>'}
  <button class="d" style="background:#e5e7eb;color:#111" onclick="$('#em').remove()">Batal / Tutup</button></div></div>`}
 
 function saveMem(){const n=$('#en').value.trim();if(!n)return toast('Nama tidak boleh kosong.');w(async()=>{await col('members').doc(S.em.id).update({name:n,rt:$('#er').value,role:$('#eo').value,since:+$('#es').value});$('#em').remove();R()},'Data anggota disimpan.')}
@@ -206,7 +267,7 @@ function laporan(){if(!S.admin)return;const Y=S.year,per=Y==='all'?'Semua Tahun'
  const tgl=new Date().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
  let o=$('#rep');if(o)o.remove();o=document.createElement('div');o.id='rep';
  o.innerHTML=`<div class="tb"><button onclick="print()">🖨 Cetak / Simpan PDF</button><button class="s" onclick="$('#rep').remove()">✕ Tutup</button></div><div class="pg">
- <div class="kop">${logo?`<img src="${logo.src}">`:''}<div><b>IKATAN PEMUDA MEKARJAYA (IKPM)</b><br>LAPORAN KEUANGAN — ${per.toUpperCase()}<br><small>Dicetak ${tgl}</small></div></div>
+ <div class="kop">${logo?`<img src="${logo.src}" style="mix-blend-mode:multiply">`:''}<div><b>IKATAN PEMUDA MEKARJAYA (IKPM)</b><br>LAPORAN KEUANGAN — ${per.toUpperCase()}<br><small>Dicetak ${tgl}</small></div></div>
  <table class="sum"><tr><td>Saldo awal</td><td class="r">${rp(awal)}</td></tr><tr><td>Total pemasukan</td><td class="r">${rp(mi)}</td></tr><tr><td>Total pengeluaran</td><td class="r">${rp(mo)}</td></tr><tr><th>Saldo akhir</th><th class="r">${rp(awal+mi-mo)}</th></tr></table>
  ${rk}${tg}<h4>Buku Kas Umum</h4><table><tr><th>Tanggal</th><th>Uraian</th><th>Kategori</th><th>Masuk</th><th>Keluar</th><th>Saldo</th></tr><tr><td colspan="5"><i>Saldo awal</i></td><td class="r">${rp(awal)}</td></tr>${rows||'<tr><td colspan="6">Belum ada transaksi.</td></tr>'}</table>
  <div class="ttd"><div>Mengetahui,<br>Ketua IKPM<br><br><br><br>( ........................ )</div><div>Mekarjaya, ${tgl}<br>Bendahara<br><br><br><br>( ........................ )</div></div></div>`;
@@ -226,7 +287,7 @@ function loans(){const L=S.loan.filter(l=>S.loanTab==='aktif'?l.status==='unpaid
  return `<div class="top"><div><h3 style="margin:0">Pinjaman Kas</h3><span class="mu">Bunga ${BUNGA*100}% dari pokok</span></div></div>
  ${S.admin?`<div class="card"><h3>Pinjaman Baru</h3><div class="f"><select id="lm"><option value="">— Pilih anggota —</option>${S.mem.map(m=>`<option value="${m.id}">${esc(m.name)} (${esc(m.rt)})</option>`).join('')}</select><input id="la" type="number" inputmode="numeric" min="1" placeholder="Pokok pinjaman (Rp)" oninput="$('#lp').textContent=this.value>0?'Total kembali: '+rp(this.value*${1+BUNGA}):''"><div class="mu" id="lp"></div><button onclick="addLoan()">Catat Pinjaman</button><div class="mu">Pokok otomatis tercatat sebagai pengeluaran kas.</div></div></div>`:''}
  <div class="tabs"><button class="${S.loanTab==='aktif'?'a':''}" onclick="S.loanTab='aktif';R()">Belum lunas (${S.loan.filter(l=>l.status==='unpaid').length})</button><button class="${S.loanTab==='lunas'?'a':''}" onclick="S.loanTab='lunas';R()">Riwayat lunas</button></div>
- <div class="card">${L.map(l=>{const paid=l.paidAmount||0, sisa=l.total-paid; return `<div class="row"><div class="g"><b>${esc(l.memberName)}</b><span class="mu">${esc(l.date)} • Pokok ${rp(l.amount)} + bunga ${rp(l.interest)}</span><span class="in" style="font-size:12px;font-weight:600">Telah dibayar: ${rp(paid)}</span></div><div style="text-align:right"><div class="mu">Sisa</div><span class="amt ${l.status==='unpaid'?'out':'in'}">${rp(sisa)}</span></div>${S.admin?(l.status==='unpaid'?`<button class="s" onclick="payLoan('${l.id}')">Cicil</button>`:'')+`<button class="d" onclick="delLoan('${l.id}')">🗑</button>`:''}</div>`}).join('')||'<div class="mu">Kosong.</div>'}</div>`}
+ <div class="card">${L.map(l=>{const paid=l.paidAmount||0, sisa=l.total-paid; return `<div class="row"><div class="g"><b>${esc(l.memberName)}</b><span class="mu">${esc(l.date)} • Pokok ${rp(l.amount)} + bunga ${rp(l.interest)}</span><span class="in" style="font-size:12px;font-weight:600;display:block;margin-top:4px">Telah dibayar: ${rp(paid)}</span></div><div style="text-align:right"><div class="mu">Sisa</div><span class="amt ${l.status==='unpaid'?'out':'in'}">${rp(sisa)}</span></div>${S.admin?(l.status==='unpaid'?`<button class="s" onclick="payLoan('${l.id}')">Cicil</button>`:'')+`<button class="d" onclick="delLoan('${l.id}')">🗑</button>`:''}</div>`}).join('')||'<div class="mu">Kosong.</div>'}</div>`}
 function addLoan(){const m=S.mem.find(x=>x.id===$('#lm').value),a=+$('#la').value;if(!m||!(a>0))return toast('Pilih anggota dan isi nominal.');
  const i=Math.round(a*BUNGA),id=col('loans').doc().id;
  w(async()=>{await col('loans').doc(id).set({memberId:m.id,memberName:m.name,amount:a,interest:i,total:a+i,paidAmount:0,status:'unpaid',date:today()});
@@ -234,7 +295,7 @@ function addLoan(){const m=S.mem.find(x=>x.id===$('#lm').value),a=+$('#la').valu
 function payLoan(id){
  const l = S.loan.find(x=>x.id===id);
  const sisa = l.total - (l.paidAmount || 0);
- const p = prompt(`Masukkan nominal cicilan/pelunasan untuk ${l.memberName}:\nSisa Tagihan: ${rp(sisa)}`, sisa);
+ const p = prompt(`Masukkan nominal cicilan/pelunasan untuk ${l.memberName}:\nSisa Tagihan: ${sisa}`, sisa);
  if(!p) return; const amt = Number(p);
  if(isNaN(amt) || amt <= 0) return toast('Nominal cicilan tidak valid.');
  const newPaid = (l.paidAmount || 0) + amt;
@@ -242,6 +303,7 @@ function payLoan(id){
  w(async()=>{
   await col('loans').doc(id).update({paidAmount: newPaid, status: status, paidAt: status==='paid'?today():(l.paidAt||'')});
   await col('transactions').add({type:'income',amount:amt,category:'Pelunasan Pinjaman',description:`Cicilan pinjaman - ${l.memberName}`,date:today(),createdAt:new Date().toISOString()})
+  R();
  }, 'Cicilan berhasil dicatat.')
 }
 function delLoan(id){if(!confirm('Hapus pinjaman beserta catatan kasnya?'))return;w(async()=>{await col('loans').doc(id).delete();await col('transactions').doc('out_'+id).delete();await col('transactions').doc('in_'+id).delete()},'Pinjaman dihapus.')}
@@ -260,7 +322,7 @@ async function csvRekap(rt){if(!S.admin)return;const d=DL;if(!d)return toast('Un
  const rows=[['RT','Nama','Peran','Iuran '+S.year,'Nominal'],...rekapData().filter(x=>!rt||x.rt===rt).flatMap(x=>x.m.map(m=>[x.rt,m.name,m.role,m.role==='Anggota Tetap'?((m.iuran && m.iuran[S.year])?'Lunas':'Belum'):'-',m.role==='Anggota Tetap' && (m.iuran && m.iuran[S.year])?getIuranAmt(m,S.year):0]))];
  const data=rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');
  try{await d.save({filename:`rekap-iuran-${rt?rt.replace(' ','-'):'semua-rt'}-${S.year}.csv`,data})}catch(e){}}
-const TABS=[['home','🏠','Beranda'],['members','👥','Anggota'],['add','➕','Catat'],['loans','🤝','Pinjaman'],['kas','📒','Buku Kas'],['rekap','📊','Rekap RT']];
+const TABS=[['home','🏠','Beranda'],['members','👥','Buku Induk'],['add','➕','Catat'],['loans','🤝','Pinjaman'],['kas','📒','Buku Kas'],['rekap','📊','Rekap']];
 function R(){if(S.tab==='add'&&!S.admin)S.tab='home';document.body.classList.toggle('isadmin',!!S.admin);$('#nav').innerHTML=TABS.filter(t=>t[0]!=='add'||S.admin).map(([k,i,l])=>`<button class="${S.tab===k?'a':''}" onclick="go('${k}')"><span>${i}</span>${l}</button>`).join('');
  $('#v').innerHTML=!S.db?`<div class="card">Memuat data… Jika terlalu lama, periksa koneksi internet.</div>`:{home,members,add,loans,kas,rekap}[S.tab]();
  $('#st').textContent=!S.db?'memuat…':S.admin?'🔓 Admin':S.coll?'✏️ Penarik Iuran':S.user?'⚠️ Belum terdaftar':'🔒 Mode baca';const b=$('#lg');if(b)b.textContent=S.user?'🚪':'🔑';b.title=S.user?'Keluar':'Masuk Admin'}
