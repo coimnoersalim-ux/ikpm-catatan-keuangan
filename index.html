@@ -4,19 +4,38 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Keuangan IKPM Mekarjaya</title>
-<!-- Favicon menggunakan gambar lampiran -->
+<!-- Favicon -->
 <link rel="icon" type="image/jpeg" href="image_5a2419.jpg">
+<script>
+  // Mengatur tema dari LocalStorage sebelum halaman dimuat agar tidak berkedip
+  var currentTheme = localStorage.getItem('theme') || 'light';
+  document.documentElement.setAttribute('data-theme', currentTheme);
+</script>
 <style>
-/* TEMA BARU: Modern Emerald (Hijau) */
-:root{--bg:#f3f4f6;--card:#ffffff;--tx:#111827;--mu:#6b7280;--bd:#e5e7eb;--pri:#059669;--pri2:#d1fae5;--in:#10b981;--out:#ef4444;--hd:#065f46;--shadow:0 8px 24px rgba(0,0,0,0.06);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px)}
-@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#111827;--card:#1f2937;--tx:#f9fafb;--mu:#9ca3af;--bd:#374151;--pri:#10b981;--pri2:#064e3b;--in:#34d399;--out:#f87171;--hd:#10b981;--shadow:0 8px 24px rgba(0,0,0,0.3);color-scheme:dark}}
-:root[data-theme=dark]{--bg:#111827;--card:#1f2937;--tx:#f9fafb;--mu:#9ca3af;--bd:#374151;--pri:#10b981;--pri2:#064e3b;--in:#34d399;--out:#f87171;--hd:#10b981;--shadow:0 8px 24px rgba(0,0,0,0.3);color-scheme:dark}
+/* TEMA MANUAL: Terang & Gelap (Bisa Diatur Lewat Tombol) */
+:root{
+  --bg:#f3f4f6; --card:#ffffff; --tx:#111827; --mu:#6b7280;
+  --bd:#e5e7eb; --pri:#059669; --pri2:#d1fae5; --in:#10b981;
+  --out:#ef4444; --hd:#065f46; --shadow:0 4px 12px rgba(0,0,0,0.05);
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px);
+  color-scheme: light;
+}
+:root[data-theme="dark"]{
+  --bg:#111827; --card:#1f2937; --tx:#f9fafb; --mu:#9ca3af;
+  --bd:#374151; --pri:#10b981; --pri2:#064e3b; --in:#34d399;
+  --out:#f87171; --hd:#022c22; --shadow:0 4px 12px rgba(0,0,0,0.4);
+  color-scheme: dark;
+}
+
 *{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
 body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding-bottom:110px}
-/* HEADER TERANG AGAR LOGO JPG MENYATU (TRANSPARAN) */
-header{background:var(--card);color:var(--hd);border-bottom:1px solid var(--bd);padding:14px 16px;display:flex;align-items:center;gap:12px;position:sticky;top:env(safe-area-inset-top,0px);z-index:5;box-shadow:0 2px 10px rgba(0,0,0,0.05)}
-.logo{width:50px;height:50px;object-fit:contain;mix-blend-mode:multiply;flex:none}
+
+/* HEADER DIKEMBALIKAN KE WARNA GELAP AGAR LOGO LEBIH MENONJOL */
+header{background:var(--hd);color:#fff;border-bottom:1px solid var(--bd);padding:12px 16px;display:flex;align-items:center;gap:12px;position:sticky;top:env(safe-area-inset-top,0px);z-index:5;box-shadow:0 2px 10px rgba(0,0,0,0.2)}
+/* BINGKAI LOGO: Dibuat bundar putih agar JPG terlihat seperti lencana/badge rapi */
+.logo{width:46px;height:46px;object-fit:contain;flex:none;background:#fff;border-radius:50%;padding:2px;box-shadow:0 2px 6px rgba(0,0,0,0.2)}
 header h1{font-size:17px;margin:0;font-weight:800;letter-spacing:-0.5px}header small{opacity:.8;font-size:12px;font-weight:600}header .sp{flex:1}
+
 main{max-width:980px;margin:0 auto;padding:16px}
 .card{background:var(--card);border:1px solid var(--bd);box-shadow:var(--shadow);border-radius:20px;padding:18px;margin-bottom:16px}
 .hero{background:linear-gradient(135deg,#10b981,#047857);box-shadow:0 8px 24px rgba(16,185,129,0.25);color:#fff;border:0}
@@ -41,7 +60,7 @@ button.s{background:var(--pri2);color:var(--pri)}button.d{background:var(--bg);c
 .kas-table td{padding:12px 18px;border-bottom:1px dashed var(--bd);vertical-align:middle}
 .kas-table tr:last-child td{border-bottom:0}
 .kas-table .r{text-align:right}
-@media(prefers-color-scheme:dark){:root:not([data-theme=light]) .kas-table tbody tr:hover{background:#374151}}
+:root[data-theme="dark"] .kas-table tbody tr:hover{background:#374151}
 
 /* Navigasi Melayang (Floating) */
 nav{position:fixed;bottom:calc(16px + env(safe-area-inset-bottom,0px));left:16px;right:16px;max-width:480px;margin:0 auto;background:var(--card);border:1px solid var(--bd);border-radius:24px;display:flex;justify-content:space-around;padding:8px;z-index:6;box-shadow:var(--shadow)}
@@ -63,21 +82,32 @@ body:not(.isadmin) .adm{display:none!important}
 </head>
 <body>
 <header>
-  <!-- LOGO DIUBAH MENJADI image_5a2419.jpg -->
+  <!-- LOGO DIUBAH MENJADI LENCANA BUNDAR -->
   <img class="logo" alt="Logo IKPM" src="image_5a2419.jpg">
   <div>
     <h1>Keuangan IKPM</h1>
-    <small>Ikatan Pemuda Mekarjaya</small>
+    <small style="color:#d1fae5">Ikatan Pemuda Mekarjaya</small>
   </div>
   <div class="sp"></div>
-  <small id="st" style="color:var(--mu)">memuat…</small>
-  <button class="s" id="lg" onclick="authBtn()" title="Masuk Admin" aria-label="Masuk Admin" style="padding:6px 10px;font-size:16px">🔑</button>
+  <small id="st" style="color:#d1fae5">memuat…</small>
+  
+  <!-- TOMBOL TEMA (CERAH/GELAP) -->
+  <button class="s" onclick="toggleTheme()" title="Ubah Tema" style="padding:6px 10px;font-size:16px;background:rgba(255,255,255,0.2);color:#fff">🌓</button>
+  
+  <button class="s" id="lg" onclick="authBtn()" title="Masuk Admin" aria-label="Masuk Admin" style="padding:6px 10px;font-size:16px;background:#fff;color:var(--hd)">🔑</button>
 </header>
 <main id="v"></main>
 <div id="toast"></div>
 <nav id="nav"></nav>
 <script src="config.js"></script>
 <script>
+// Fungsi Ubah Tema (Cerah/Gelap)
+function toggleTheme() {
+    var theme = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+}
+
 const $=s=>document.querySelector(s),rp=n=>new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',maximumFractionDigits:0}).format(n||0);
 const esc=s=>String(s!=null?s:'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let IURAN=25000; const BUNGA=.3,BULAN=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
@@ -152,7 +182,7 @@ function kas(){
                     <th class="r">Saldo (Rp)</th>
                     ${S.admin ? '<th style="width:40px;text-align:center">Aksi</th>' : ''}
                 </tr>
-                ${S.year !== 'all' ? `<tr><td colspan="4" style="background:#f9fafb"><i>Saldo Pindahan Tahun Sebelumnya</i></td><td class="r" style="font-weight:700;background:#f9fafb">${rp(prevSaldo)}</td>${S.admin?'<td style="background:#f9fafb"></td>':''}</tr>` : ''}
+                ${S.year !== 'all' ? `<tr><td colspan="4" class="mu"><i>Saldo Pindahan Tahun Sebelumnya</i></td><td class="r" style="font-weight:700">${rp(prevSaldo)}</td>${S.admin?'<td></td>':''}</tr>` : ''}
             </thead>
             <tbody>
                 ${rows || `<tr><td colspan="${S.admin?'6':'5'}" class="mu" style="text-align:center;padding:20px">Tidak ada data transaksi.</td></tr>`}
@@ -247,7 +277,7 @@ function emView(){const m=S.mem.find(x=>x.id===S.em.id);if(!m)return;const y=S.e
  <button onclick="saveMem()">Simpan Profil</button><hr style="border:0;border-top:1px dashed var(--bd);width:100%">
  ${tetap?`<label class="mu" style="color:var(--out);font-weight:bold">Ubah Tagihan Khusus (Jika berbeda dari tarif dasar)</label><div style="display:flex;gap:8px"><select id="es_y" onchange="S.em.y=this.value;emView()" style="width:auto">${opt(ys,y)}</select><input id="ea" type="number" inputmode="numeric" value="${tagihan(m,y)}"></div><button class="s" onclick="saveTagihanKhusus()">Simpan Tagihan Khusus ${y}</button><div class="mu" style="font-weight:600;color:var(--in)">*Pembayaran wajib/donasi kini dilakukan di menu CATAT TRANSAKSI ➕.</div>`
  :'<div class="mu">Anggota donatur tidak memiliki tagihan tetap. Pembayaran dilakukan di menu CATAT TRANSAKSI.</div>'}
- <button class="d" style="background:#e5e7eb;color:#111" onclick="$('#em').remove()">Batal / Tutup</button></div></div>`}
+ <button class="d" style="background:var(--bg);border:1px solid var(--bd)" onclick="$('#em').remove()">Batal / Tutup</button></div></div>`}
 
 function saveMem(){const n=$('#en').value.trim();if(!n)return toast('Nama tidak boleh kosong.');w(async()=>{await col('members').doc(S.em.id).update({name:n,rt:$('#er').value,role:$('#eo').value,since:+$('#es').value});$('#em').remove();R()},'Data anggota disimpan.')}
 function saveTagihanKhusus(){const m=S.mem.find(x=>x.id===S.em.id), y=$('#es_y').value, a=+$('#ea').value;
@@ -267,7 +297,7 @@ function laporan(){if(!S.admin)return;const Y=S.year,per=Y==='all'?'Semua Tahun'
  const tgl=new Date().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
  let o=$('#rep');if(o)o.remove();o=document.createElement('div');o.id='rep';
  o.innerHTML=`<div class="tb"><button onclick="print()">🖨 Cetak / Simpan PDF</button><button class="s" onclick="$('#rep').remove()">✕ Tutup</button></div><div class="pg">
- <div class="kop">${logo?`<img src="${logo.src}" style="mix-blend-mode:multiply">`:''}<div><b>IKATAN PEMUDA MEKARJAYA (IKPM)</b><br>LAPORAN KEUANGAN — ${per.toUpperCase()}<br><small>Dicetak ${tgl}</small></div></div>
+ <div class="kop">${logo?`<img src="${logo.src}" style="border-radius:50%;padding:2px;border:1px solid #111">`:''}<div><b>IKATAN PEMUDA MEKARJAYA (IKPM)</b><br>LAPORAN KEUANGAN — ${per.toUpperCase()}<br><small>Dicetak ${tgl}</small></div></div>
  <table class="sum"><tr><td>Saldo awal</td><td class="r">${rp(awal)}</td></tr><tr><td>Total pemasukan</td><td class="r">${rp(mi)}</td></tr><tr><td>Total pengeluaran</td><td class="r">${rp(mo)}</td></tr><tr><th>Saldo akhir</th><th class="r">${rp(awal+mi-mo)}</th></tr></table>
  ${rk}${tg}<h4>Buku Kas Umum</h4><table><tr><th>Tanggal</th><th>Uraian</th><th>Kategori</th><th>Masuk</th><th>Keluar</th><th>Saldo</th></tr><tr><td colspan="5"><i>Saldo awal</i></td><td class="r">${rp(awal)}</td></tr>${rows||'<tr><td colspan="6">Belum ada transaksi.</td></tr>'}</table>
  <div class="ttd"><div>Mengetahui,<br>Ketua IKPM<br><br><br><br>( ........................ )</div><div>Mekarjaya, ${tgl}<br>Bendahara<br><br><br><br>( ........................ )</div></div></div>`;
@@ -287,7 +317,7 @@ function loans(){const L=S.loan.filter(l=>S.loanTab==='aktif'?l.status==='unpaid
  return `<div class="top"><div><h3 style="margin:0">Pinjaman Kas</h3><span class="mu">Bunga ${BUNGA*100}% dari pokok</span></div></div>
  ${S.admin?`<div class="card"><h3>Pinjaman Baru</h3><div class="f"><select id="lm"><option value="">— Pilih anggota —</option>${S.mem.map(m=>`<option value="${m.id}">${esc(m.name)} (${esc(m.rt)})</option>`).join('')}</select><input id="la" type="number" inputmode="numeric" min="1" placeholder="Pokok pinjaman (Rp)" oninput="$('#lp').textContent=this.value>0?'Total kembali: '+rp(this.value*${1+BUNGA}):''"><div class="mu" id="lp"></div><button onclick="addLoan()">Catat Pinjaman</button><div class="mu">Pokok otomatis tercatat sebagai pengeluaran kas.</div></div></div>`:''}
  <div class="tabs"><button class="${S.loanTab==='aktif'?'a':''}" onclick="S.loanTab='aktif';R()">Belum lunas (${S.loan.filter(l=>l.status==='unpaid').length})</button><button class="${S.loanTab==='lunas'?'a':''}" onclick="S.loanTab='lunas';R()">Riwayat lunas</button></div>
- <div class="card">${L.map(l=>{const paid=l.paidAmount||0, sisa=l.total-paid; return `<div class="row"><div class="g"><b>${esc(l.memberName)}</b><span class="mu">${esc(l.date)} • Pokok ${rp(l.amount)} + bunga ${rp(l.interest)}</span><span class="in" style="font-size:12px;font-weight:600;display:block;margin-top:4px">Telah dibayar: ${rp(paid)}</span></div><div style="text-align:right"><div class="mu">Sisa</div><span class="amt ${l.status==='unpaid'?'out':'in'}">${rp(sisa)}</span></div>${S.admin?(l.status==='unpaid'?`<button class="s" onclick="payLoan('${l.id}')">Cicil</button>`:'')+`<button class="d" onclick="delLoan('${l.id}')">🗑</button>`:''}</div>`}).join('')||'<div class="mu">Kosong.</div>'}</div>`}
+ <div class="card">${L.map(l=>{const paid=l.paidAmount||0, sisa=l.total-paid; return `<div class="row"><div class="g"><b>${esc(l.memberName)}</b><span class="mu">${esc(l.date)} • Pokok ${rp(l.amount)} + bunga ${rp(l.interest)}</span><span class="in" style="font-size:12px;font-weight:600;display:block;margin-top:4px">Telah dibayar: ${rp(paid)}</span></div><div style="text-align:right"><div class="mu">Sisa</div><span class="amt ${l.status==='unpaid'?'out':'in'}">${rp(sisa)}</span></div>${S.admin?(l.status==='unpaid'?`<button class="s" onclick="payLoan('${l.id}')">Cicil/Lunas</button>`:'')+`<button class="d" onclick="delLoan('${l.id}')">🗑</button>`:''}</div>`}).join('')||'<div class="mu">Kosong.</div>'}</div>`}
 function addLoan(){const m=S.mem.find(x=>x.id===$('#lm').value),a=+$('#la').value;if(!m||!(a>0))return toast('Pilih anggota dan isi nominal.');
  const i=Math.round(a*BUNGA),id=col('loans').doc().id;
  w(async()=>{await col('loans').doc(id).set({memberId:m.id,memberName:m.name,amount:a,interest:i,total:a+i,paidAmount:0,status:'unpaid',date:today()});
@@ -306,7 +336,7 @@ function payLoan(id){
   R();
  }, 'Cicilan berhasil dicatat.')
 }
-function delLoan(id){if(!confirm('Hapus pinjaman beserta catatan kasnya?'))return;w(async()=>{await col('loans').doc(id).delete();await col('transactions').doc('out_'+id).delete();await col('transactions').doc('in_'+id).delete()},'Pinjaman dihapus.')}
+function delLoan(id){if(!confirm('Hapus pinjaman beserta catatan kasnya?'))return;w(async()=>{await col('loans').doc(id).delete();await col('transactions').doc('out_'+id).delete();const related=await col('transactions').where('description','==',`Cicilan pinjaman - ${S.loan.find(x=>x.id===id)?.memberName}`).get();related.docs.forEach(d=>d.ref.delete());},'Pinjaman dihapus.')}
 
 const RTS=['RT Mekarjaya','RT Cipancur'];
 function rekapData(){const y=S.year;return RTS.map(rt=>{const m=S.mem.filter(x=>x.rt===rt),t=m.filter(x=>x.role==='Anggota Tetap'),l=t.filter(x=>x.iuran && x.iuran[y]);return{rt,m,total:m.length,tetap:t.length,donatur:m.length-t.length,lunas:l.length,belum:t.filter(x=>!(x.iuran && x.iuran[y])),kas:l.reduce((a,x)=>a+getIuranAmt(x,y),0),don:m.reduce((a,x)=>a+(x.don||[]).filter(d=>d.year===y).reduce((b,d)=>b+d.amount,0),0),tg:t.filter(x=>arrears(x).length),target:t.reduce((a,x)=>a+tagihan(x,y),0)}})}
