@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#3d5af1">
-<meta name="author" content="@coim">
+<meta name="author" content="Coim">
 <title>Keuangan IKPM Mekarjaya</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -479,7 +479,7 @@ const TITLES={home:'Dashboard',members:'Anggota',add:'Catat Transaksi',bayar:'Pe
 const qaHtml=()=>!S.coll?'':`<button onclick="CATAT_TAB='iuran';go('add')">＋ Iuran</button>`+(S.admin?`<button onclick="CATAT_TAB='income';go('add')">＋ Pemasukan</button><button onclick="CATAT_TAB='expense';go('add')">＋ Pengeluaran</button><button onclick="go('loans')">＋ Pinjaman</button>`:'');
 const loaded=()=>['tx','mem','loan','iur'].every(k=>S.ld[k]);
 function R(){if(S.tab==='add'&&!S.coll)S.tab='home';document.body.classList.toggle('isadmin',!!S.admin);
- const nb=TABS.filter(t=>t[0]!=='add'||S.coll).map(([k,i,l])=>`<button class="${S.tab===k?'a':''}" onclick="go('${k}')"><span>${IC[k]||i}</span>${l}${k==='bayar'&&S.coll&&pend().length?`<b class="bdg">${pend().length}</b>`:''}</button>`).join('');$('#nav').innerHTML=nb;$('#side').innerHTML=nb+'<div class="side-credit">Dibuat dengan ♥ oleh <b>@coim</b></div>';$('#qa').innerHTML=qaHtml();
+ const nb=TABS.filter(t=>t[0]!=='add'||S.coll).map(([k,i,l])=>`<button class="${S.tab===k?'a':''}" onclick="go('${k}')"><span>${IC[k]||i}</span>${l}${k==='bayar'&&S.coll&&pend().length?`<b class="bdg">${pend().length}</b>`:''}</button>`).join('');$('#nav').innerHTML=nb;$('#side').innerHTML=nb+'<div class="side-credit">Dibuat dengan ♥ oleh <b>Coim</b></div>';$('#qa').innerHTML=qaHtml();
  $('#v').innerHTML=!S.db||!loaded()?`<div class="card empty">Memuat data… Jika terlalu lama, periksa koneksi internet.</div>`:{home,members,add,bayar,loans,kas,rekap}[S.tab]();
  $('#st').textContent=!S.db?'memuat…':S.admin?'Admin':S.coll?'Penarik Iuran':S.user?'Belum terdaftar':'Mode baca';
  const b=$('#lg');b.innerHTML=S.user?IC.logout:IC.key;b.title=b.ariaLabel=S.user?'Keluar':'Masuk Admin'}
